@@ -1,0 +1,481 @@
+export const initialUsers = [
+  {
+    id: "user_student_1",
+    name: "Alex Johnson",
+    email: "alex.student@learnflow.edu",
+    role: "Student",
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80",
+    joinedDate: "2025-01-15",
+    status: "Active"
+  },
+  {
+    id: "user_student_2",
+    name: "Sarah Chen",
+    email: "sarah.chen@learnflow.edu",
+    role: "Student",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80",
+    joinedDate: "2025-02-01",
+    status: "Active"
+  },
+  {
+    id: "user_instructor_1",
+    name: "Dr. Marcus Vance",
+    email: "marcus.vance@learnflow.edu",
+    role: "Instructor",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80",
+    bio: "Senior Full-Stack Architect & AI Researcher with 12+ years of experience mentoring thousands of engineers worldwide.",
+    joinedDate: "2024-09-10",
+    status: "Active"
+  },
+  {
+    id: "user_instructor_2",
+    name: "Elena Rostova",
+    email: "elena.rostova@learnflow.edu",
+    role: "Instructor",
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=250&q=80",
+    bio: "Principal Product Designer & UX Strategist, previously design lead at Stripe & Figma design systems contributor.",
+    joinedDate: "2024-10-05",
+    status: "Active"
+  },
+  {
+    id: "user_admin_1",
+    name: "Admin LearnFlow",
+    email: "admin@learnflow.edu",
+    role: "Admin",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=250&q=80",
+    joinedDate: "2024-01-01",
+    status: "Active"
+  }
+];
+
+export const initialCourses = [
+  {
+    id: "course_react_mastery",
+    title: "Complete React 19 & Next.js Architecture Bootcamp",
+    category: "Development",
+    price: 49.99,
+    rating: 4.9,
+    reviewCount: 1420,
+    instructorId: "user_instructor_1",
+    instructorName: "Dr. Marcus Vance",
+    instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
+    durationMs: 9000000, // 2 hours 30 mins
+    enrolledCount: 3820,
+    status: "published",
+    featured: true,
+    previewYoutubeUrl: "https://www.youtube.com/watch?v=bMknfKXIFA8",
+    previewYoutubeId: "bMknfKXIFA8",
+    description: `<h2>Master Modern React From Fundamentals to Production Scale</h2>
+<p>Build blazing-fast, resilient web applications using <strong>React 19</strong>, <strong>Tailwind CSS</strong>, and server actions. This course covers everything you need to break into high-growth software engineering roles.</p>
+<h3>What You Will Learn:</h3>
+<ul>
+  <li>Component Architecture and React 19 Hooks</li>
+  <li>Global state management with Redux Toolkit and Query</li>
+  <li>Optimistic updates, transitions, and streaming SSR</li>
+  <li>Enterprise security, JWT authentication & protected routes</li>
+</ul>
+<blockquote>"The definitive curriculum for engineers who want clean code principles combined with real-world architecture."</blockquote>`,
+    curriculum: [
+      {
+        sectionId: "sec_1",
+        title: "Section 1: Foundations & React 19 Paradigms",
+        lessons: [
+          {
+            id: "les_101",
+            title: "Course Overview & Modern Architecture Setup",
+            youtubeUrl: "https://www.youtube.com/watch?v=bMknfKXIFA8",
+            youtubeId: "bMknfKXIFA8",
+            durationMs: 900000, // 15 mins
+            notes: `<h4>Lecture 1 Notes: Welcome to LearnFlow</h4>
+<p>In this lesson, we break down our roadmap, explore project setup with Vite, and understand how modern bundlers hot-reload application state cleanly.</p>
+<pre><code>// Example Vite config setup
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+});</code></pre>`
+          },
+          {
+            id: "les_102",
+            title: "Hooks Deep Dive: useState, useEffect & Custom Hooks",
+            youtubeUrl: "https://www.youtube.com/watch?v=0ZJgIjIuY7U",
+            youtubeId: "0ZJgIjIuY7U",
+            durationMs: 1500000, // 25 mins
+            notes: `<h4>Managing State Predictably</h4>
+<p>Remember that state updates in React are batched. Never mutate state directly; always create fresh copies to preserve immutability and allow fine-grained reconciliation.</p>`
+          }
+        ]
+      },
+      {
+        sectionId: "sec_2",
+        title: "Section 2: Enterprise State Management with Redux Toolkit",
+        lessons: [
+          {
+            id: "les_201",
+            title: "Store Configuration, Slices and Selectors",
+            youtubeUrl: "https://www.youtube.com/watch?v=9zySeP5vH9c",
+            youtubeId: "9zySeP5vH9c",
+            durationMs: 1800000, // 30 mins
+            notes: `<h4>Redux Toolkit (RTK)</h4>
+<p>RTK eliminates boilerplate via <code>createSlice</code>. Immer handles behind-the-scenes immutability so you can write concise, mutating-style code safely.</p>`
+          },
+          {
+            id: "les_202",
+            title: "Asynchronous Thunks and Network Middleware",
+            youtubeUrl: "https://www.youtube.com/watch?v=NqzdVN2tyvQ",
+            youtubeId: "NqzdVN2tyvQ",
+            durationMs: 2400000, // 40 mins
+            notes: `<h4>Handling Async Thunks</h4>
+<p>Combine Axios interceptors with Redux async thunks to cleanly capture auth states, refresh tokens, and broadcast user feedback.</p>`
+          }
+        ]
+      }
+    ],
+    reviews: [
+      {
+        id: "rev_1",
+        userName: "David Miller",
+        userAvatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
+        rating: 5,
+        date: "2025-02-10",
+        comment: "Exceptional depth! The curriculum is clean, no fluff, and the code examples reflect actual production problems."
+      },
+      {
+        id: "rev_2",
+        userName: "Jessica Alba",
+        userAvatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&q=80",
+        rating: 5,
+        date: "2025-02-04",
+        comment: "The course player with Quill notes and YouTube integration makes studying completely frictionless."
+      }
+    ]
+  },
+  {
+    id: "course_uiux_design",
+    title: "UI/UX & Design Systems: From Notion to Figma Pro",
+    category: "Design",
+    price: 39.99,
+    rating: 4.85,
+    reviewCount: 940,
+    instructorId: "user_instructor_2",
+    instructorName: "Elena Rostova",
+    instructorAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=250&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80",
+    durationMs: 7200000, // 2 hours
+    enrolledCount: 2430,
+    status: "published",
+    featured: true,
+    previewYoutubeUrl: "https://www.youtube.com/watch?v=c9Wg6Cb_YlU",
+    previewYoutubeId: "c9Wg6Cb_YlU",
+    description: `<h2>Craft Minimal, High-Converting User Interfaces</h2>
+<p>Learn how top product companies create cohesive visual language. We dissect the clean aesthetics of <strong>Notion</strong>, <strong>Linear</strong>, and <strong>Apple</strong> to master visual hierarchy, typography tokens, and responsive layout grids.</p>
+<h3>Course Highlights:</h3>
+<ul>
+  <li>Color psychology: Tailored HSL and dark mode tokens</li>
+  <li>Auto layout, design tokens and scalable UI kits</li>
+  <li>Micro-interactions and prototype transitions</li>
+</ul>`,
+    curriculum: [
+      {
+        sectionId: "sec_ui_1",
+        title: "Section 1: Modern Visual Foundations",
+        lessons: [
+          {
+            id: "les_ui_101",
+            title: "Design Tokens & Harmonious Color Palettes",
+            youtubeUrl: "https://www.youtube.com/watch?v=c9Wg6Cb_YlU",
+            youtubeId: "c9Wg6Cb_YlU",
+            durationMs: 1200000,
+            notes: `<h4>Color Contrast & Accessibility</h4>
+<p>Ensure WCAG AA contrast ratio of at least 4.5:1 for body copy. Use subtle elevations rather than harsh black drop shadows.</p>`
+          }
+        ]
+      }
+    ],
+    reviews: [
+      {
+        id: "rev_3",
+        userName: "Karan Patel",
+        userAvatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80",
+        rating: 5,
+        date: "2025-01-28",
+        comment: "Elena breaks down design into methodical rules that even backend devs can implement with confidence!"
+      }
+    ]
+  },
+  {
+    id: "course_python_ai",
+    title: "Applied AI & Python Full-Stack Engineering",
+    category: "AI & Data",
+    price: 54.99,
+    rating: 4.92,
+    reviewCount: 2100,
+    instructorId: "user_instructor_1",
+    instructorName: "Dr. Marcus Vance",
+    instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80",
+    durationMs: 10800000, // 3 hours
+    enrolledCount: 5120,
+    status: "published",
+    featured: true,
+    previewYoutubeUrl: "https://www.youtube.com/watch?v=rfscVS0vtbw",
+    previewYoutubeId: "rfscVS0vtbw",
+    description: `<h2>Build Production-Ready LLM & AI Agents with Python</h2>
+<p>Harness the power of modern machine learning. Connect LangChain, embeddings vector stores, and FastAPI backends to React client applications.</p>`,
+    curriculum: [
+      {
+        sectionId: "sec_py_1",
+        title: "Section 1: Python Deep Dive & FastAPI",
+        lessons: [
+          {
+            id: "les_py_101",
+            title: "Async Python, Generators, and Pydantic V2",
+            youtubeUrl: "https://www.youtube.com/watch?v=rfscVS0vtbw",
+            youtubeId: "rfscVS0vtbw",
+            durationMs: 1800000,
+            notes: `<h4>High Performance Python</h4>
+<p>Leverage async/await event loops for concurrent I/O bound LLM streaming responses.</p>`
+          }
+        ]
+      }
+    ],
+    reviews: []
+  },
+  {
+    id: "course_cloud_devops",
+    title: "DevOps & Cloud Native Architecture with Docker & K8s",
+    category: "Cloud",
+    price: 44.99,
+    rating: 4.78,
+    reviewCount: 650,
+    instructorId: "user_instructor_1",
+    instructorName: "Dr. Marcus Vance",
+    instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&w=800&q=80",
+    durationMs: 8400000,
+    enrolledCount: 1890,
+    status: "published",
+    featured: false,
+    previewYoutubeUrl: "https://www.youtube.com/watch?v=fqMOX6JJhGo",
+    previewYoutubeId: "fqMOX6JJhGo",
+    description: `<h2>CI/CD Pipelines, Containers and Scalable Cloud Hosting</h2>
+<p>From zero to continuous automated production deploys with Docker, Kubernetes, and GitHub Actions.</p>`,
+    curriculum: [],
+    reviews: []
+  }
+];
+
+export const initialEnrolments = [
+  {
+    id: "enrol_1",
+    userId: "user_student_1",
+    courseId: "course_react_mastery",
+    enrolledDate: "2025-01-20",
+    progress: 50,
+    completedLessons: ["les_101"],
+    lastAccessedLessonId: "les_102"
+  },
+  {
+    id: "enrol_2",
+    userId: "user_student_1",
+    courseId: "course_uiux_design",
+    enrolledDate: "2025-02-02",
+    progress: 100,
+    completedLessons: ["les_ui_101"],
+    lastAccessedLessonId: "les_ui_101"
+  },
+  {
+    id: "enrol_3",
+    userId: "user_student_2",
+    courseId: "course_react_mastery",
+    enrolledDate: "2025-02-05",
+    progress: 25,
+    completedLessons: [],
+    lastAccessedLessonId: "les_101"
+  }
+];
+
+export const initialAssignments = [
+  {
+    id: "asg_1",
+    courseId: "course_react_mastery",
+    courseTitle: "Complete React 19 & Next.js Architecture Bootcamp",
+    title: "Build an Interactive Kanban Board with Redux",
+    description: `<p>Create a Trello/Notion style Kanban board using <strong>@reduxjs/toolkit</strong>.</p>
+<ul>
+  <li>Support Drag and Drop or column moving</li>
+  <li>Persist state locally or via API</li>
+  <li>Add responsive Tailwind styling</li>
+</ul>`,
+    deadline: "2026-11-05T23:59:59",
+    maxMarks: 100,
+    createdAt: "2025-02-01"
+  },
+  {
+    id: "asg_2",
+    courseId: "course_uiux_design",
+    courseTitle: "UI/UX & Design Systems: From Notion to Figma Pro",
+    title: "Design a High-Fidelity Design System in Figma",
+    description: `<p>Design an 8-point grid layout system with dark & light tokens, typography scales, and modular button states.</p>`,
+    deadline: "2026-11-12T23:59:59",
+    maxMarks: 50,
+    createdAt: "2025-02-05"
+  }
+];
+
+export const initialSubmissions = [
+  {
+    id: "sub_1",
+    assignmentId: "asg_1",
+    studentId: "user_student_1",
+    studentName: "Alex Johnson",
+    submittedAt: "2025-02-12T14:32:00",
+    fileName: "kanban_board_alex_johnson.zip",
+    fileUrl: "#",
+    notes: "Implemented complete Redux slice with optimistic column reordering and persistence. Tested on mobile and desktop.",
+    status: "Graded",
+    marks: 95,
+    feedback: "Outstanding component decoupling and clean Redux slices! Great attention to design."
+  },
+  {
+    id: "sub_2",
+    assignmentId: "asg_2",
+    studentId: "user_student_1",
+    studentName: "Alex Johnson",
+    submittedAt: "2025-02-14T09:15:00",
+    fileName: "figma_tokens_alex.pdf",
+    fileUrl: "#",
+    notes: "Included complete color palette tokens and mobile responsive layout specs.",
+    status: "Pending",
+    marks: null,
+    feedback: null
+  }
+];
+
+export const initialAttendance = [
+  {
+    id: "att_1",
+    courseId: "course_react_mastery",
+    courseTitle: "Complete React 19 & Next.js Architecture Bootcamp",
+    date: "2025-02-10",
+    records: [
+      { studentId: "user_student_1", studentName: "Alex Johnson", status: "Present" },
+      { studentId: "user_student_2", studentName: "Sarah Chen", status: "Present" }
+    ]
+  },
+  {
+    id: "att_2",
+    courseId: "course_react_mastery",
+    courseTitle: "Complete React 19 & Next.js Architecture Bootcamp",
+    date: "2025-02-17",
+    records: [
+      { studentId: "user_student_1", studentName: "Alex Johnson", status: "Present" },
+      { studentId: "user_student_2", studentName: "Sarah Chen", status: "Late" }
+    ]
+  },
+  {
+    id: "att_3",
+    courseId: "course_uiux_design",
+    courseTitle: "UI/UX & Design Systems: From Notion to Figma Pro",
+    date: "2025-02-11",
+    records: [
+      { studentId: "user_student_1", studentName: "Alex Johnson", status: "Present" }
+    ]
+  },
+  {
+    id: "att_4",
+    courseId: "course_uiux_design",
+    courseTitle: "UI/UX & Design Systems: From Notion to Figma Pro",
+    date: "2025-02-18",
+    records: [
+      { studentId: "user_student_1", studentName: "Alex Johnson", status: "Present" }
+    ]
+  }
+];
+
+export const initialResults = [
+  {
+    id: "res_1",
+    studentId: "user_student_1",
+    courseId: "course_uiux_design",
+    courseTitle: "UI/UX & Design Systems: From Notion to Figma Pro",
+    totalMarks: 94,
+    grade: "A+",
+    gpa: 4.0,
+    remarks: "Mastery demonstrated across layout algorithms and token architecture.",
+    publishedDate: "2025-02-20"
+  },
+  {
+    id: "res_2",
+    studentId: "user_student_1",
+    courseId: "course_react_mastery",
+    courseTitle: "Complete React 19 & Next.js Architecture Bootcamp",
+    totalMarks: 88,
+    grade: "A",
+    gpa: 3.8,
+    remarks: "Superb execution on Redux architecture and asynchronous state lifecycle.",
+    publishedDate: "2025-02-21"
+  }
+];
+
+export const initialNotifications = [
+  {
+    id: "notif_1",
+    userId: "user_student_1",
+    title: "Assignment Graded",
+    message: "Dr. Marcus Vance graded your Kanban Board assignment: 95/100 (A+)",
+    date: "2 hours ago",
+    read: false,
+    type: "success"
+  },
+  {
+    id: "notif_2",
+    userId: "user_student_1",
+    title: "New Lesson Unlocked",
+    message: "A new lesson on Redux Toolkit Middleware is now available in React Bootcamp.",
+    date: "1 day ago",
+    read: false,
+    type: "info"
+  },
+  {
+    id: "notif_3",
+    userId: "user_student_1",
+    title: "Attendance Recorded",
+    message: "Your attendance was marked as Present for UI/UX Design Systems.",
+    date: "3 days ago",
+    read: true,
+    type: "info"
+  }
+];
+
+export const initialMaterials = [
+  {
+    id: "mat_1",
+    courseId: "course_react_mastery",
+    title: "React 19 Architecture Cheatsheet & Code Samples",
+    fileType: "PDF",
+    size: "2.4 MB",
+    uploadedDate: "2025-02-01",
+    url: "#"
+  },
+  {
+    id: "mat_2",
+    courseId: "course_react_mastery",
+    title: "State Management Diagram (Redux Toolkit + Thunks)",
+    fileType: "Image",
+    size: "1.1 MB",
+    uploadedDate: "2025-02-05",
+    url: "#"
+  },
+  {
+    id: "mat_3",
+    courseId: "course_uiux_design",
+    title: "Figma UI Token Starter Kit (.fig)",
+    fileType: "Design Kit",
+    size: "8.5 MB",
+    uploadedDate: "2025-02-08",
+    url: "#"
+  }
+];

@@ -1,0 +1,680 @@
+INDIRA GANDHI NATIONAL OPEN UNIVERSITY
+School of Computer and Information Sciences
+Bachelor of Computer Applications (BCA) — 6th Semester
+Course Code: BCSP-064
+PROJECT SYNOPSIS
+LearnFlow
+A Learning Management System with Student & Admin Dashboard
+(Using MERN Stack: MongoDB, Express.js, React.js, Node.js)
+Field
+Details
+Student Name
+Aryan Mehta
+Enrollment Number
+2252287807
+Programme
+Bachelor of Computer Applications (BCA)
+Course Code
+BCSP-064
+Study Centre Code
+38046
+Regional Centre Code
+38
+Email ID
+aaryanmehta@gmail.com
+Mobile Number
+9810002643
+TABLE OF CONTENTS
+S.No.
+Section
+Page No.
+1
+Title of the Project
+3
+2
+Introduction and Objectives of the Project
+4
+3
+Project Category
+5
+4
+Analysis — DFDs, ER Diagram, Database Design
+5
+5
+Complete Structure — Modules, Data Structures, Process Logic, Testing, Reports
+9
+6
+Tools / Platform, Hardware & Software Requirements
+13
+7
+Industry / Client
+14
+8
+Future Scope and Further Enhancement
+14
+LearnFlow
+1. Title of the Project
+LearnFlow — A Learning Management System with Student & Admin Dashboard
+(Using MERN Stack: MongoDB, Express.js, React.js, Node.js)
+2. Introduction and Objectives of the Project
+2.1 Introduction
+LearnFlow is a full-stack web-based Learning Management System (LMS) developed using the MERN stack — MongoDB, Express.js, React.js, and Node.js. The platform is designed to digitize and streamline the complete academic workflow of an educational institution, bridging the gap between students, instructors, and administrators through a single, unified digital platform.
+In today's digital era, educational institutions face growing challenges in managing course content, tracking student progress, conducting assessments, and maintaining academic records efficiently. Traditional paper-based or fragmented systems are error-prone, time-consuming, and difficult to scale. LearnFlow addresses these problems by offering a centralized, role-based platform where students can access course materials and submit assignments, instructors can manage course content and evaluate performance, and administrators can oversee the entire institution's academic operations from a dedicated dashboard.
+The system is directly inspired by the real-life needs of students and institutions like IGNOU, where managing courses, assignments, attendance, and results digitally is a genuine operational requirement. The project covers the full Software Development Life Cycle (SDLC) — from requirements analysis and design to development, testing, and deployment.
+2.2 Objectives
+Design and develop a full-stack Learning Management System named LearnFlow using the MERN stack.
+Implement secure role-based authentication for three user roles: Student, Instructor, and Admin using JWT.
+Enable students to browse, enrol in, and track progress across multiple courses on the platform.
+Allow instructors to create and manage courses, upload lecture materials (videos, PDFs, notes), and post assignments.
+Build an assignment and submission module with deadline tracking, file upload, and instructor grading.
+Develop an attendance tracking module enabling instructors to mark and students to view their attendance records.
+Create a result and grade management system to publish marks, generate progress reports, and calculate GPA.
+Build a comprehensive Admin Dashboard for managing users (students, instructors), courses, and institution-wide reports.
+Implement a real-time notification system for assignment deadlines, result announcements, and course updates.
+Ensure platform security through bcrypt hashing, JWT authentication, input validation, and HTTPS enforcement.
+Deploy the platform on cloud infrastructure: Vercel (frontend), Render (backend), MongoDB Atlas (database).
+3. Project Category
+LearnFlow falls under the following BCSP-064 categories. All technologies used are explicitly permitted under the tools listed on Page 12 of the project guidelines:
+Category Field
+Details
+BCSP-064 Category
+OOPS / Internet Technologies / RDBMS / Multimedia
+Application Type
+Web-Based Full-Stack Learning Management System
+Frontend (Permitted)
+React.js — listed under LANGUAGES (pg. 12)
+Backend (Permitted)
+Node.js, Express.js — listed under INTERNET TECHNOLOGIES (pg. 12)
+Database (Permitted)
+MongoDB — listed under BACKEND / RDBMS section (pg. 12)
+File Storage
+Cloudinary — for lecture videos, PDFs, assignment files
+Architecture
+MVC (Model–View–Controller) Pattern
+Prohibited Tech
+Not using Visual Basic+MS-Access, C, or C++ (as per guidelines)
+4. Analysis
+4.1 Data Flow Diagrams (DFD)
+DFD Level 0 — Context Diagram
+The entire LearnFlow system is represented as a single process interacting with four external entities:
+Student: Registers/logs in, browses and enrols in courses, views lecture materials, submits assignments, checks attendance and results, receives notifications.
+Instructor: Logs in, creates and manages courses, uploads lecture content, posts assignments, marks attendance, grades submissions, publishes results.
+Administrator: Manages all users (students & instructors), manages course catalogue, monitors platform activity, generates institution-wide reports.
+Cloud Storage (Cloudinary): Receives file upload requests from the system; stores and serves lecture videos, PDFs, and assignment files via CDN URLs.
+DFD Level 1 — System Processes
+Process
+Input
+Output
+Data Store
+1.0 User Mgmt
+Register/Login data
+JWT Token, User profile
+users
+2.0 Course Mgmt
+Course details, content uploads
+Course listings, material URLs
+courses, materials
+3.0 Enrolment
+Student enrol request
+Enrolment confirmation, access
+enrolments
+4.0 Assignments
+Assignment post / submission
+Assignment data, grades
+assignments, submissions
+5.0 Attendance
+Attendance mark by instructor
+Attendance record, report
+attendance
+6.0 Results
+Marks entry by instructor
+Grade card, progress report
+results
+7.0 Notifications
+System events (deadline, result)
+Email / in-app alerts
+notifications
+8.0 Admin Mgmt
+Admin actions, filters
+Reports, user/course records
+All collections
+DFD Level 2 — Sub-Process Detail
+Process 1.0 — User Management:
+1.1 Registration: Validate inputs → check email uniqueness → bcrypt hash password (salt=10) → save user with role → send welcome email → return 201.
+1.2 Login: Find user by email → bcrypt.compare() → generate JWT({id, role}, SECRET, {expiresIn:'7d'}) → return token + role.
+1.3 Role Middleware: Extract Bearer token → jwt.verify() → attach req.user → check role (student/instructor/admin) → next() or 403.
+Process 4.0 — Assignment Management:
+4.1 Post Assignment: Instructor sends {title, description, deadline, courseId} → validate → save Assignment document → trigger deadline notifications to enrolled students.
+4.2 Submit Assignment: Student uploads file to Cloudinary → receive URL → save Submission{student, assignment, fileUrl, submittedAt} → return confirmation.
+4.3 Grade Submission: Instructor reviews submission → POST /api/submissions/:id/grade → update {marks, feedback} → trigger result notification to student.
+Process 5.0 — Attendance:
+5.1 Mark Attendance: Instructor sends [{studentId, status}] for a course-date → upsert Attendance documents → return summary.
+5.2 View Attendance: Student requests GET /api/attendance/:courseId → aggregate attendance records → return {present, absent, percentage}.
+4.2 ER Diagram (Entity-Relationship Overview)
+Entity
+Related Entity
+Relationship
+Key
+User
+Course
+Instructor creates many Courses
+user._id → course.instructor
+User (Student)
+Enrolment
+Student has many Enrolments
+user._id → enrolment.student
+Course
+Enrolment
+Course has many Enrolments
+course._id → enrolment.course
+Course
+Material
+Course has many Materials
+course._id → material.course
+Course
+Assignment
+Course has many Assignments
+course._id → assignment.course
+Assignment
+Submission
+Assignment has many Submissions
+assignment._id → submission.assignment
+User (Student)
+Attendance
+Student has many Attendance records
+user._id → attendance.student
+User (Student)
+Result
+Student has many Results
+user._id → result.student
+4.3 Database Design
+MongoDB (NoSQL) with Mongoose ODM. Embedded documents used for tightly coupled data. ObjectId references used for relational links. Key indexed fields: email (users), course (enrolments, materials, assignments, attendance).
+users — User Collection
+Field Name
+Data Type
+Constraint / Description
+_id
+ObjectId
+PK — Auto-generated
+name
+String
+Required — Full name
+email
+String
+Required, Unique — Login ID
+password
+String
+Required — bcrypt hashed
+role
+String
+Enum: 'student' | 'instructor' | 'admin'
+avatar
+String
+Cloudinary URL — profile picture
+createdAt
+Date
+Auto — Account creation timestamp
+courses — Course Collection
+Field Name
+Data Type
+Constraint / Description
+_id
+ObjectId
+PK — Auto-generated
+title
+String
+Required — Course name
+description
+String
+Required — Course overview
+instructor
+ObjectId
+Required — Ref: users._id
+category
+String
+e.g. Programming, Mathematics, Science
+thumbnail
+String
+Cloudinary URL — course cover image
+isPublished
+Boolean
+Default: false — controls visibility
+createdAt
+Date
+Auto — Course creation timestamp
+enrolments — Enrolment Collection
+Field Name
+Data Type
+Constraint / Description
+_id
+ObjectId
+PK — Auto-generated
+student
+ObjectId
+Required — Ref: users._id
+course
+ObjectId
+Required — Ref: courses._id
+enrolledAt
+Date
+Auto — Enrolment timestamp
+progress
+Number
+Default: 0 — Completion % (0–100)
+completedLessons
+Array
+Array of completed material ObjectIds
+materials — Course Material Collection
+Field Name
+Data Type
+Constraint / Description
+_id
+ObjectId
+PK — Auto-generated
+course
+ObjectId
+Required — Ref: courses._id
+title
+String
+Required — Lecture/material title
+type
+String
+Enum: 'video' | 'pdf' | 'notes'
+fileUrl
+String
+Cloudinary URL of uploaded file
+order
+Number
+Display order within the course
+assignments — Assignment Collection
+Field Name
+Data Type
+Constraint / Description
+_id
+ObjectId
+PK — Auto-generated
+course
+ObjectId
+Required — Ref: courses._id
+title
+String
+Required — Assignment title
+description
+String
+Required — Instructions
+deadline
+Date
+Required — Submission deadline
+maxMarks
+Number
+Required — Maximum marks
+submissions — Submission Collection
+Field Name
+Data Type
+Constraint / Description
+_id
+ObjectId
+PK — Auto-generated
+assignment
+ObjectId
+Required — Ref: assignments._id
+student
+ObjectId
+Required — Ref: users._id
+fileUrl
+String
+Cloudinary URL of submitted file
+submittedAt
+Date
+Auto — Submission timestamp
+marks
+Number
+Default: null — Awarded marks
+feedback
+String
+Instructor feedback text
+status
+String
+Enum: 'submitted' | 'graded'
+attendance — Attendance Collection
+Field Name
+Data Type
+Constraint / Description
+_id
+ObjectId
+PK — Auto-generated
+course
+ObjectId
+Required — Ref: courses._id
+student
+ObjectId
+Required — Ref: users._id
+date
+Date
+Required — Class date
+status
+String
+Enum: 'present' | 'absent' | 'late'
+results — Result Collection
+Field Name
+Data Type
+Constraint / Description
+_id
+ObjectId
+PK — Auto-generated
+student
+ObjectId
+Required — Ref: users._id
+course
+ObjectId
+Required — Ref: courses._id
+totalMarks
+Number
+Aggregate of all assignment marks
+grade
+String
+Computed: A / B / C / D / F
+remarks
+String
+Instructor remarks
+publishedAt
+Date
+Auto — Result publication timestamp
+5. Complete Structure
+5.1 Number of Modules and Their Description
+LearnFlow is divided into 9 modules. Estimated total development effort: 16–18 weeks.
+Module
+Name
+Description
+Effort
+M1
+User Authentication
+Registration, login, JWT auth, role-based access for Student, Instructor, Admin, password reset via OTP
+2 weeks
+M2
+Course Management
+Instructors create/edit/publish courses; students browse & search; category filtering; course thumbnail upload
+2 weeks
+M3
+Enrolment Module
+Student enrolment in courses, enrolment history, unenrol option, progress tracking per course
+1.5 weeks
+M4
+Content / Material Module
+Instructors upload lecture videos, PDFs, notes via Cloudinary; students stream/download; lesson completion tracking
+2 weeks
+M5
+Assignment Module
+Instructors post assignments with deadlines; students upload submissions; instructor grading with marks & feedback
+2 weeks
+M6
+Attendance Module
+Instructors mark daily attendance (present/absent/late); students view attendance % per course; admin reports
+1.5 weeks
+M7
+Result & Grade Module
+Marks aggregation, automatic grade computation (A/B/C/D/F), result publication, downloadable grade card PDF
+2 weeks
+M8
+Notification Module
+Real-time in-app alerts + Nodemailer emails for deadlines, result publication, new course content, announcements
+1 week
+M9
+Admin Dashboard
+Platform overview stats, user management (CRUD), course moderation, enrolment reports, institution-wide analytics
+2 weeks
+5.2 Data Structures for All Modules
+Module
+Primary Data Structure
+Key Fields
+M1
+User Document (Mongoose)
+{ _id, name, email, password(hashed), role, avatar, createdAt }
+M2
+Course Document
+{ _id, title, description, instructor(ref), category, thumbnail, isPublished }
+M3
+Enrolment Document
+{ student(ref), course(ref), enrolledAt, progress(0-100), completedLessons[] }
+M4
+Material Document
+{ course(ref), title, type(video/pdf/notes), fileUrl(Cloudinary), order }
+M5
+Assignment + Submission Docs
+Assignment: { course(ref), title, deadline, maxMarks }; Submission: { assignment(ref), student(ref), fileUrl, marks, feedback }
+M6
+Attendance Document
+{ course(ref), student(ref), date, status(present/absent/late) }
+M7
+Result Document
+{ student(ref), course(ref), totalMarks, grade, remarks, publishedAt }
+M8
+Notification Document
+{ user(ref), type, message, isRead(bool), createdAt }
+M9
+Aggregation Pipelines (JSON)
+MongoDB $group, $lookup, $match pipelines for analytics and reports
+5.3 Process Logic for Each Module
+M1 — User Authentication
+Register: POST /api/auth/register → validate fields → check email unique → bcrypt.hash(password,10) → save User({role}) → send welcome email → return 201 + user info.
+Login: POST /api/auth/login → User.findOne({email}) → bcrypt.compare() → jwt.sign({id,role}, SECRET, {expiresIn:'7d'}) → return token.
+Role Guard Middleware: verify JWT → attach req.user → check role → next() or 403 Forbidden.
+M2 — Course Management
+Create Course (Instructor): POST /api/courses → upload thumbnail to Cloudinary → save Course({instructor: req.user.id, isPublished: false}) → return 201.
+Publish Course: PATCH /api/courses/:id/publish → verify ownership → set isPublished: true → notify enrolled students.
+Search: GET /api/courses?keyword&category&page → $regex on title/description → .skip().limit() → return {courses, total}.
+M3 — Enrolment
+Enrol: POST /api/enrolments → check if already enrolled → create Enrolment({student, course, progress:0}) → return 201.
+Progress Update: PATCH /api/enrolments/:id/progress → add lessonId to completedLessons → recalculate progress = (completed/total)*100 → save.
+M4 — Content / Material
+Upload Material: POST /api/materials → upload file to Cloudinary → save Material({course, title, type, fileUrl, order}) → return 201.
+Get Course Content: GET /api/materials/:courseId → verify student is enrolled → return ordered materials list.
+M5 — Assignment & Submission
+Post Assignment: POST /api/assignments → save Assignment({course, title, description, deadline, maxMarks}) → trigger deadline notifications to enrolled students.
+Submit: POST /api/submissions → upload file to Cloudinary → save Submission({assignment, student, fileUrl, status:'submitted'}) → return 201.
+Grade: PATCH /api/submissions/:id/grade → update {marks, feedback, status:'graded'} → update Result aggregate → notify student.
+M6 — Attendance
+Mark: POST /api/attendance → instructor sends [{studentId, status}] for courseId + date → bulk upsert Attendance documents.
+Report: GET /api/attendance/:courseId/:studentId → aggregate {present, absent, late, percentage} → return attendance summary.
+M7 — Results & Grades
+Publish Result: POST /api/results → aggregate all graded submissions for student+course → sum totalMarks → compute grade (A:90+, B:75+, C:60+, D:50+, F:<50) → save Result → notify student.
+Grade Card: GET /api/results/:studentId → return all course results with grade and remarks → frontend renders downloadable PDF.
+M9 — Admin Dashboard
+Stats: GET /api/admin/stats → aggregate: total users by role, total courses, total enrolments, active students this month.
+User Management: GET/PATCH/DELETE /api/admin/users → list, update role, deactivate, or remove users.
+5.4 Testing Details
+Unit Testing (Jest + Supertest)
+Test Case
+Input
+Expected Output
+Module
+Register valid student
+{name, email, password, role:'student'}
+HTTP 201, user object
+M1
+Register duplicate email
+Existing email
+HTTP 400 — Email exists
+M1
+Login valid credentials
+Correct email+pass
+HTTP 200 + JWT token
+M1
+Enrol in course
+{courseId}
+HTTP 201, enrolment created
+M3
+Enrol twice same course
+Already enrolled
+HTTP 400 — Already enrolled
+M3
+Submit assignment
+{assignmentId, file}
+HTTP 201, submission saved
+M5
+Grade submission
+{marks, feedback}
+HTTP 200, status: graded
+M5
+Mark attendance
+[{studentId, status}]
+HTTP 200, attendance saved
+M6
+Integration Testing (Postman)
+Auth Flow: POST /register → POST /login → get JWT → GET /profile with Bearer token → verify 200 OK.
+Course Enrolment Flow: Login as student → GET /courses → POST /enrolments/{courseId} → GET /materials/{courseId} → verify access granted.
+Assignment Flow: Login as instructor → POST /assignments → login as student → POST /submissions (file upload) → login as instructor → PATCH /submissions/:id/grade → verify result updated.
+Admin Flow: Login as admin → GET /admin/stats → PATCH /admin/users/:id (change role) → verify change reflected.
+System Testing (End-to-End)
+Student Journey: Register → Login → Browse Courses → Enrol → View Lectures → Download PDF → Submit Assignment → Check Attendance → View Grade Card.
+Instructor Journey: Login → Create Course → Upload Materials → Post Assignment → Mark Attendance → Grade Submissions → Publish Results.
+Admin Journey: Login → View Dashboard Stats → Manage Users → Moderate Courses → Generate Reports.
+Performance: Page load < 2s; API response < 500ms. Cross-browser: Chrome, Firefox, Safari, Edge.
+Responsive Testing: 375px (mobile), 768px (tablet), 1440px (desktop).
+5.5 Reports Generation
+Report Name
+User
+Content
+Format
+Student Grade Card
+Student
+All courses with marks, grade (A–F), instructor remarks, GPA calculation, and semester summary
+PDF (downloadable)
+Attendance Report
+Student / Instructor
+Date-wise attendance status (present/absent/late), total classes, attendance percentage per course
+Table / PDF
+Assignment Performance Report
+Instructor
+All submissions per assignment — student name, marks awarded, submission date, pending/graded status
+Table / CSV export
+Course Enrolment Report
+Admin / Instructor
+Total students enrolled per course, enrolment date, completion progress percentage
+Table / Chart
+Platform Analytics Report
+Admin
+Total users by role, active students, courses published, enrolments this month, top performing courses
+Dashboard + CSV
+6. Tools / Platform, Hardware and Software Requirements
+6.1 Software Requirements
+Tool / Technology
+Version
+Purpose in LearnFlow
+Node.js
+LTS v20+
+Server-side JavaScript runtime
+Express.js
+v4.x
+RESTful API backend framework
+React.js + Vite
+v18+
+Frontend UI — component-driven SPA
+MongoDB Atlas
+v7.x
+Cloud-hosted NoSQL database
+Mongoose ODM
+v8.x
+Schema modelling and validation
+JWT (jsonwebtoken)
+v9.x
+Role-based token authentication
+bcrypt.js
+v2.x
+Secure password hashing
+Cloudinary Node SDK
+v2.x
+Lecture video, PDF, and file storage & CDN
+Multer
+v1.x
+Middleware for handling multipart file uploads
+Nodemailer
+v6.x
+Email notifications — deadlines, results, OTP
+Redux Toolkit
+v2.x
+Global state management for React
+React Router DOM
+v6.x
+Client-side page routing and navigation
+React YouTube
+Latest
+Embed and play YouTube lecture videos in-app
+Axios
+v1.x
+HTTP client for API calls from React
+Tailwind CSS
+v3.x
+Utility-first CSS framework for UI styling
+Clerk (React + Express)
+Latest
+Authentication & user management (frontend + backend)
+Quill
+Latest
+Rich text editor for course descriptions and assignments
+uniqid
+Latest
+Generate unique IDs for uploads and records
+humanize-duration
+Latest
+Convert course/video durations to readable format
+RC Progress
+Latest
+Circular and line progress bar components for course progress
+jsPDF / React-PDF
+Latest
+Client-side grade card PDF generation
+Jest + Supertest
+Latest
+Unit and integration testing
+Visual Studio Code
+Latest
+Primary development IDE
+Postman
+Latest
+API testing and documentation
+Git + GitHub
+Latest
+Version control and code repository
+Vercel
+Latest
+Frontend deployment (React)
+Render
+Latest
+Backend deployment (Node/Express)
+6.2 Hardware Requirements
+Component
+Development Machine
+Client (Student/Instructor)
+Processor
+Intel Core i5 / AMD Ryzen 5 or better
+Any modern processor (2015+)
+RAM
+Minimum 8 GB (16 GB recommended)
+Minimum 2 GB
+Storage
+40 GB free SSD space
+No local storage needed (web app)
+OS
+Windows 10/11, macOS Ventura+, Ubuntu 22.04
+Any OS with a modern browser
+Network
+Broadband — minimum 10 Mbps
+Minimum 2 Mbps (for video streaming)
+Browser
+Chrome / Firefox / Safari / Edge (latest)
+Chrome, Firefox, Safari, Edge
+7. Industry / Client
+Are you doing this project for any Industry/Client?   NO
+This project — LearnFlow — is developed solely as an academic project in partial fulfilment of the requirements for the degree of Bachelor of Computer Applications (BCA) from Indira Gandhi National Open University (IGNOU). It is not being developed for, or on behalf of, any industry, organization, or client. The project is inspired by the real-life academic environment of educational institutions and addresses genuine day-to-day operational challenges faced by students and administrators in managing courses, assignments, attendance, and results.
+8. Future Scope and Further Enhancement of the Project
+Live Virtual Classroom: Integrate WebRTC or third-party APIs (Zoom/Jitsi) to enable real-time live lecture sessions directly within LearnFlow with chat, hand-raise, and screen-sharing features.
+AI-Powered Doubt Resolution: Implement an NLP-based chatbot trained on course content to answer student queries, suggest relevant materials, and provide 24/7 academic assistance.
+Adaptive Learning Paths: Use machine learning to analyse each student's performance and automatically recommend personalized learning paths, exercises, and revision materials.
+Mobile Application: Develop a cross-platform mobile app using React Native for Android and iOS, enabling students to access lectures, submit assignments, and track progress on the go.
+Online Quiz & Examination Module: Add a timed online quiz/examination system with MCQ, short-answer formats, auto-evaluation, and instant result display.
+Discussion Forum: Introduce a course-level discussion board where students and instructors can post questions, share resources, and collaborate in threaded conversations.
+Certificate Generation: Auto-generate and issue digitally signed course completion certificates (PDF) upon students achieving the required progress and grade threshold.
+Payment Gateway Integration: Enable paid course enrolments for premium courses offered by guest instructors, with Razorpay/Stripe integration and instructor revenue sharing.
+Offline Access (PWA): Convert LearnFlow into a Progressive Web App to support offline reading of downloaded materials and background sync when connectivity is restored.
+Multi-Institution Support: Extend the platform to support multiple institutions under a single deployment with isolated data, custom branding, and separate admin panels per institution.

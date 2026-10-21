@@ -1,0 +1,11 @@
+{
+  "name": "learnflow-root",
+  "version": "1.0.0",
+  "description": "LearnFlow - Full-Stack Modern Learning Management System (LMS)",
+  "scripts": {
+    "start:backend": "cd Backend && npm run start",
+    "dev:backend": "cd Backend && npm run dev",
+    "start:frontend": "cd Frontend && npm run dev",
+    "build:frontend": "cd Frontend && npm run build"
+  }
+}
