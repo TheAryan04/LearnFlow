@@ -4,6 +4,7 @@ import { Menu, X, LogOut, User, ChevronDown } from 'lucide-react';
 import { useAuthRole } from '../../hooks/useAuthRole';
 import { ROLES } from '../../utils/constants';
 import NotificationBell from '../common/NotificationBell';
+import { UserButton } from '@clerk/react';
 
 const LINKS = [
   { to: '/courses', label: 'Catalogue' },
@@ -51,7 +52,7 @@ function UserMenu({ user, role, onLogout }) {
 }
 
 export default function Navbar() {
-  const { user, role, logout, isAuthenticated } = useAuthRole();
+  const { user, role, logout, isAuthenticated, mode } = useAuthRole();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const dashboard = role === ROLES.INSTRUCTOR ? '/instructor' : role === ROLES.ADMIN ? '/admin' : '/student';
@@ -67,7 +68,15 @@ export default function Navbar() {
         </nav>
         <div className="flex items-center gap-2">
           {isAuthenticated && <NotificationBell />}
-          {isAuthenticated ? (
+          {isAuthenticated && mode === 'clerk' ? (
+            <div className="flex items-center gap-3 pl-1" data-testid="navbar-clerk-user">
+              <span className="hidden sm:block text-right leading-tight">
+                <span className="block text-sm text-ink-800 max-w-[140px] truncate">{user?.name}</span>
+                <span className="block text-[10px] uppercase tracking-[0.14em] text-terra-700">{role}</span>
+              </span>
+              <UserButton />
+            </div>
+          ) : isAuthenticated ? (
             <UserMenu user={user} role={role} onLogout={() => { logout(); navigate('/'); }} />
           ) : (
             <div className="flex items-center gap-1">

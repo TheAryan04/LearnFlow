@@ -20,6 +20,9 @@ import AboutPage from './pages/public/AboutPage';
 import ContactPage from './pages/public/ContactPage';
 import SignInPage from './pages/auth/SignInPage';
 import SignUpPage from './pages/auth/SignUpPage';
+import AuthContinuePage from './pages/auth/AuthContinuePage';
+import ClerkSessionBridge from './components/auth/ClerkSessionBridge';
+import { CLERK_ENABLED } from './utils/clerk';
 
 // Student Pages
 import StudentOverview from './pages/student/StudentOverview';
@@ -86,6 +89,7 @@ function AppRoutes() {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/sign-in/*" element={<SignInPage />} />
       <Route path="/sign-up/*" element={<SignUpPage />} />
+      <Route path="/auth/continue" element={<AuthContinuePage />} />
 
       {/* Dedicated Course Player with Real-time Chat */}
       <Route
@@ -141,6 +145,7 @@ export default function App() {
       <ErrorBoundary>
         <RealTimeSyncWrapper>
           <BrowserRouter>
+            {CLERK_ENABLED && <ClerkSessionBridge />}
             <AppRoutes />
           </BrowserRouter>
         </RealTimeSyncWrapper>

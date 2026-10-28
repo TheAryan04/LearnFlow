@@ -1,16 +1,18 @@
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logout as logoutAction } from '../redux/slices/authSlice';
 import { ROLES } from '../utils/constants';
-import { setAuthToken } from '../utils/api';
-import { setSocketToken } from '../utils/socket';
+import { setAuthToken, setClerkTokenGetter } from '../utils/api';
+import { disconnectSocket } from '../utils/socket';
 
+// Clerk sign-out is handled by <UserButton />; this ends demo sessions.
 export function useAuthRole() {
   const dispatch = useDispatch();
-  const { user, role, isAuthenticated, token } = useSelector((state) => state.auth);
+  const { user, role, isAuthenticated, token, mode } = useSelector((state) => state.auth);
 
   const handleLogout = () => {
     setAuthToken(null);
-    setSocketToken(null);
+    setClerkTokenGetter(null);
+    disconnectSocket();
     dispatch(logoutAction());
   };
 
@@ -18,6 +20,7 @@ export function useAuthRole() {
     user,
     role,
     token,
+    mode,
     isAuthenticated,
     isStudent: role === ROLES.STUDENT,
     isInstructor: role === ROLES.INSTRUCTOR,
