@@ -30,7 +30,7 @@ export default function CreateEditCourse() {
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Development');
-  const [price, setPrice] = useState(49.99);
+  const [price, setPrice] = useState(3999);
   const [thumbnail, setThumbnail] = useState(
     'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'
   );
@@ -260,7 +260,7 @@ export default function CreateEditCourse() {
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Price ($ USD)
+              Price (₹ INR)
             </label>
             <input
               type="number"

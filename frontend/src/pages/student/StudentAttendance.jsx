@@ -13,32 +13,7 @@ export default function StudentAttendance() {
     dispatch(fetchAttendance({ studentId: user?.id }));
   }, [dispatch, user]);
 
-  const history = studentStats.history || [
-    {
-      sessionId: 'att_1',
-      courseTitle: 'Complete React 19 & Next.js Architecture Bootcamp',
-      date: '2025-02-10',
-      status: 'Present',
-    },
-    {
-      sessionId: 'att_2',
-      courseTitle: 'Complete React 19 & Next.js Architecture Bootcamp',
-      date: '2025-02-17',
-      status: 'Late',
-    },
-    {
-      sessionId: 'att_3',
-      courseTitle: 'UI/UX & Design Systems: From Notion to Figma Pro',
-      date: '2025-02-11',
-      status: 'Present',
-    },
-    {
-      sessionId: 'att_4',
-      courseTitle: 'UI/UX & Design Systems: From Notion to Figma Pro',
-      date: '2025-02-18',
-      status: 'Present',
-    },
-  ];
+  const history = studentStats.history || [];
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -84,7 +59,7 @@ export default function StudentAttendance() {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
         <div className="sm:col-span-1 bg-white dark:bg-cardDark p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-soft flex flex-col items-center justify-center text-center">
           <CircularProgress
-            percent={studentStats.attendanceRate || 88}
+            percent={studentStats.attendanceRate ?? 100}
             size={100}
             strokeWidth={9}
             strokeColor="#2D5A3A"
@@ -98,7 +73,7 @@ export default function StudentAttendance() {
         <div className="bg-white dark:bg-cardDark p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-soft flex flex-col justify-center">
           <span className="text-xs text-slate-400 font-semibold uppercase">Total Sessions</span>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">
-            {studentStats.totalSessions || history.length}
+            {studentStats.totalSessions ?? history.length}
           </p>
           <p className="text-[11px] text-slate-400 mt-1">Scheduled cohort sessions</p>
         </div>
@@ -106,7 +81,7 @@ export default function StudentAttendance() {
         <div className="bg-white dark:bg-cardDark p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-soft flex flex-col justify-center">
           <span className="text-xs text-slate-400 font-semibold uppercase">Present Days</span>
           <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-            {studentStats.presentCount || 3}
+            {studentStats.presentCount ?? 0}
           </p>
           <p className="text-[11px] text-slate-400 mt-1">On-time attendances</p>
         </div>
@@ -114,7 +89,7 @@ export default function StudentAttendance() {
         <div className="bg-white dark:bg-cardDark p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-soft flex flex-col justify-center">
           <span className="text-xs text-slate-400 font-semibold uppercase">Late / Absent</span>
           <p className="text-2xl font-extrabold text-amber-500 mt-1">
-            {studentStats.lateCount || 1} / {studentStats.absentCount || 0}
+            {studentStats.lateCount ?? 0} / {studentStats.absentCount ?? 0}
           </p>
           <p className="text-[11px] text-slate-400 mt-1">Allowed absences: 4</p>
         </div>

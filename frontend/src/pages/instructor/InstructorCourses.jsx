@@ -7,6 +7,7 @@ import { fetchManagedCourses, updateCourse, deleteCourse } from '../../redux/sli
 import { useToast } from '../../components/common/Toast';
 import EmptyState from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/LoadingSpinner';
+import { formatPrice } from '../../utils/currency';
 
 const FILTERS = ['All', 'Published', 'Draft'];
 
@@ -19,7 +20,7 @@ function CourseRow({ course, onToggle, onDelete }) {
         <img src={course.thumbnail} alt={course.title} className="w-20 h-14 rounded-md object-cover saturate-[0.85] shrink-0" />
         <div className="min-w-0">
           <Link to={`/courses/${course.id}`} className="font-serif text-lg text-ink-900 hover:text-terra-700 transition-colors line-clamp-1">{course.title}</Link>
-          <p className="text-xs text-ink-500">{course.category} · {duration} · {course.price ? `$${course.price}` : 'Free'}</p>
+          <p className="text-xs text-ink-500">{course.category} · {duration} · {formatPrice(course.price)}</p>
         </div>
       </div>
       <div className="md:col-span-2 text-sm text-ink-600 flex md:flex-col gap-3 md:gap-0.5">

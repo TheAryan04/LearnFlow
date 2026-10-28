@@ -4,7 +4,7 @@ import {
   FileBarChart,
   Download,
   Users,
-  DollarSign,
+  IndianRupee,
   BookOpen,
   CalendarCheck,
   Database,
@@ -31,6 +31,7 @@ import GlassCard from '../../components/ui/GlassCard';
 import Badge from '../../components/ui/Badge';
 import TiltCard from '../../components/ui/TiltCard';
 import FloatingElements from '../../components/ui/FloatingElements';
+import { formatINR, formatINRShort } from '../../utils/currency';
 
 const reveal = {
   hidden: { opacity: 0, y: 28 },
@@ -42,16 +43,16 @@ const reveal = {
 };
 
 const REVENUE_TREND = [
-  { month: 'Jan', revenue: 14200, enrolments: 420, activeUsers: 2400 },
-  { month: 'Feb', revenue: 18400, enrolments: 560, activeUsers: 2650 },
-  { month: 'Mar', revenue: 22100, enrolments: 680, activeUsers: 2890 },
-  { month: 'Apr', revenue: 19800, enrolments: 590, activeUsers: 2740 },
-  { month: 'May', revenue: 27500, enrolments: 820, activeUsers: 3100 },
-  { month: 'Jun', revenue: 31200, enrolments: 940, activeUsers: 3280 },
-  { month: 'Jul', revenue: 29800, enrolments: 890, activeUsers: 3200 },
-  { month: 'Aug', revenue: 35600, enrolments: 1080, activeUsers: 3350 },
-  { month: 'Sep', revenue: 42100, enrolments: 1250, activeUsers: 3400 },
-  { month: 'Oct', revenue: 48900, enrolments: 1430, activeUsers: 3420 },
+  { month: 'Jan', revenue: 1178600, enrolments: 420, activeUsers: 2400 },
+  { month: 'Feb', revenue: 1527200, enrolments: 560, activeUsers: 2650 },
+  { month: 'Mar', revenue: 1834300, enrolments: 680, activeUsers: 2890 },
+  { month: 'Apr', revenue: 1643400, enrolments: 590, activeUsers: 2740 },
+  { month: 'May', revenue: 2282500, enrolments: 820, activeUsers: 3100 },
+  { month: 'Jun', revenue: 2589600, enrolments: 940, activeUsers: 3280 },
+  { month: 'Jul', revenue: 2473400, enrolments: 890, activeUsers: 3200 },
+  { month: 'Aug', revenue: 2954800, enrolments: 1080, activeUsers: 3350 },
+  { month: 'Sep', revenue: 3494300, enrolments: 1250, activeUsers: 3400 },
+  { month: 'Oct', revenue: 4058700, enrolments: 1430, activeUsers: 3420 },
 ];
 
 const REPORT_CATALOG = [
@@ -92,13 +93,13 @@ const REPORT_CATALOG = [
     id: 'revenue',
     title: 'Tuition Revenue & Financial Audits',
     description: 'Detailed revenue receipts, monthly payment summaries, and financial cohort trends.',
-    icon: DollarSign,
+    icon: IndianRupee,
     filename: 'learnflow_financial_revenue_report.csv',
     jsonFilename: 'learnflow_financial_revenue_report.json',
     variant: 'success',
     rows: REVENUE_TREND.map((row) => ({
       Month: row.month,
-      GrossRevenue: row.revenue,
+      GrossRevenueINR: row.revenue,
       Enrolments: row.enrolments,
       ActiveUsers: row.activeUsers,
     })),
@@ -194,7 +195,7 @@ export default function AdminReports() {
     {
       title: 'Tuition Revenue & Financial Audits',
       description: 'Detailed revenue receipts, monthly payment summaries, and financial cohort trends.',
-      icon: DollarSign,
+      icon: IndianRupee,
       onClick: handleExportRevenue,
       filename: 'learnflow_financial_revenue_report.csv',
     },
@@ -231,7 +232,7 @@ export default function AdminReports() {
     },
     {
       icon: TrendingUp,
-      value: `$${totalRevenue.toLocaleString()}`,
+      value: formatINR(totalRevenue),
       label: 'Audited Revenue',
       variant: 'success',
       trend: { positive: true, label: 'Jan — Oct window' },
@@ -287,7 +288,7 @@ export default function AdminReports() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-accent/10 text-accent flex items-center justify-center">
-                  <DollarSign className="w-5 h-5" />
+                  <IndianRupee className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">
@@ -302,7 +303,7 @@ export default function AdminReports() {
               <div className="flex items-center gap-4 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                 <span className="inline-flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-                  Gross revenue ($ USD)
+                  Gross revenue (₹ INR)
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-accent" />
@@ -331,12 +332,12 @@ export default function AdminReports() {
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(val) => `$${val / 1000}k`}
+                    tickFormatter={formatINRShort}
                   />
                   <Tooltip
                     contentStyle={chartTooltipStyle}
                     formatter={(val, name) => [
-                      name === 'revenue' ? `$${val.toLocaleString()}` : val.toLocaleString(),
+                      name === 'revenue' ? formatINR(val) : val.toLocaleString('en-IN'),
                       name === 'revenue' ? 'Gross Revenue' : 'Enrolments',
                     ]}
                   />

@@ -7,6 +7,7 @@ import { useToast } from '../../components/common/Toast';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import StatCard from '../../components/ui/StatCard';
 import { Skeleton } from '../../components/common/LoadingSpinner';
+import { formatINR, formatINRShort } from '../../utils/currency';
 
 const ACTIONS = [
   { to: '/admin/users', label: 'Users', description: 'Assign roles and manage access', icon: UserCog },
@@ -37,8 +38,8 @@ function RevenueChart({ data }) {
         </defs>
         <CartesianGrid strokeDasharray="2 4" vertical={false} stroke="#D5CEBF" />
         <XAxis dataKey="month" stroke="#A8A090" tickLine={false} axisLine={false} fontSize={12} />
-        <YAxis stroke="#A8A090" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(v) => `$${v / 1000}k`} />
-        <Tooltip contentStyle={tooltipStyle} />
+        <YAxis stroke="#A8A090" tickLine={false} axisLine={false} fontSize={12} tickFormatter={formatINRShort} />
+        <Tooltip contentStyle={tooltipStyle} formatter={(v, n) => (n === 'Revenue' ? formatINR(v) : v.toLocaleString('en-IN'))} />
         <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#8C3322" strokeWidth={1.75} fill="url(#lfRevenue)" />
         <Area type="monotone" dataKey="enrolments" name="Enrolments" stroke="#57534E" strokeWidth={1.25} strokeDasharray="4 3" fill="transparent" />
       </AreaChart>
@@ -57,7 +58,7 @@ export default function AdminOverview() {
 
   const chart = stats?.revenueChartData || [];
   const annual = chart.reduce((a, r) => a + r.revenue, 0);
-  const fmt = (n) => (n ?? 0).toLocaleString();
+  const fmt = (n) => (n ?? 0).toLocaleString('en-IN');
 
   return (
     <DashboardLayout>
@@ -92,7 +93,7 @@ export default function AdminOverview() {
         <section>
           <div className="flex flex-wrap items-end justify-between gap-4 pb-4 border-b border-ink-900 mb-6">
             <h2 className="font-serif text-2xl text-ink-900">Revenue & enrolments</h2>
-            <p className="text-sm text-ink-500">Annual revenue <span className="font-serif text-xl text-ink-900 ml-2" data-testid="admin-annual-revenue">${fmt(annual)}</span></p>
+            <p className="text-sm text-ink-500">Annual revenue <span className="font-serif text-xl text-ink-900 ml-2" data-testid="admin-annual-revenue">{formatINR(annual)}</span></p>
           </div>
           {stats ? <RevenueChart data={chart} /> : <Skeleton className="h-[300px]" />}
         </section>

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import humanizeDuration from 'humanize-duration';
 import { Star, ArrowUpRight } from 'lucide-react';
+import { formatPrice } from '../../utils/currency';
 
 const clamp = (n) => Math.min(100, Math.max(0, Math.round(n)));
 
@@ -44,7 +45,7 @@ export default function CourseCard({ course, isEnrolled = false, progress = 0, o
             <span className="text-xs text-moss-700 font-medium">In progress</span>
           ) : (
             <div className="flex items-baseline gap-3">
-              <span className="font-serif text-xl text-ink-900">{course.price ? `$${course.price}` : 'Free'}</span>
+              <span className="font-serif text-xl text-ink-900">{formatPrice(course.price)}</span>
               <span className="flex items-center gap-1 text-xs text-ink-500"><Star className="w-3 h-3 fill-ochre-500 text-ochre-500" />{course.rating || 4.9}</span>
             </div>
           )}

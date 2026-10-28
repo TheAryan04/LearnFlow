@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Users, BookOpen, ClipboardList, DollarSign, PlusCircle, CalendarCheck, Award, ArrowRight } from 'lucide-react';
+import { Users, BookOpen, ClipboardList, IndianRupee, PlusCircle, CalendarCheck, Award, ArrowRight } from 'lucide-react';
 import api from '../../utils/api';
 import { fetchSubmissions } from '../../redux/slices/assignmentsSlice';
 import StatCard from '../../components/ui/StatCard';
@@ -46,7 +46,7 @@ export default function InstructorOverview() {
         <StatCard icon={Users} value={stats ? stats.totalStudents.toLocaleString() : '—'} label="Total students" />
         <StatCard icon={BookOpen} value={myCourses.length} label="Your courses" />
         <StatCard icon={ClipboardList} value={pending.length} label="To grade" variant="warning" />
-        <StatCard icon={DollarSign} value={stats?.totalRevenue || '—'} label="Revenue" variant="success" trend={stats ? { positive: true, label: `${stats.monthlyRevenue} this month` } : null} />
+        <StatCard icon={IndianRupee} value={stats?.totalRevenue || '—'} label="Revenue" variant="success" trend={stats ? { positive: true, label: `${stats.monthlyRevenue} this month` } : null} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">

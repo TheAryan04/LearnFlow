@@ -1,0 +1,76 @@
+{
+  "summary": "Iteration 2 retest of the 15 fixes from iteration 1, plus a quick regression. Backend: 36 pytest tests (25 old + 11 new), 35 pass when run one at a time. The 1 failure is new: price 'nan' or 'inf' returns 500 and also saves a broken course. Frontend: 14 of 15 fixes verified in the UI. Fix (12) is only partly done, because StudentAttendance.jsx still shows fake fallback numbers. Regression flows all pass.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/courses, PUT /api/courses/{id} (price), num() helper", "issue": "num() accepts float('nan') and float('inf'). Price 'nan' or 'inf' returns 500 AND inserts the course before JSON encoding fails. After that, GET /api/courses/all returns 500 for the instructor and admin until the record is removed by hand (reproduced: all:500, then 200 after cleanup). If such a course is published (status:'published' in the body), the public GET /api/courses would also 500. Fix: in num(), reject values where math.isfinite(out) is False with a 400. The same applies to totalMarks and maxMarks.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "PUT /api/enrolments/{id}/progress", "issue": "float(body['progress']) is not validated, so 'abc' gives 500. Use num()."},
+      {"endpoint": "socket.io broadcasts", "issue": "assignment_graded (marks and feedback), result_published (grades) and new_submission are still sent to every socket. Only 'notification' is room-scoped. Any logged-in client can read other students' grades."},
+      {"endpoint": "POST /api/auth/login", "issue": "The lockout key is the first X-Forwarded-For value, which the client controls. Sending a new spoofed XFF on each try gets around the lockout. Consider keying on email alone, or on the last trusted proxy hop."},
+      {"endpoint": "GET /api/enrolments", "issue": "Not scoped for instructors: an instructor can list enrolments (with student names) for other instructors' courses."},
+      {"endpoint": "POST /api/results", "issue": "Does not check that the student is enrolled in the course."},
+      {"endpoint": "POST /api/courses (admin)", "issue": "When admin passes instructorId, instructorName and instructorAvatar are still set from the admin user."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "StudentAttendance.jsx", "issue": "Fix (12) is incomplete. A freshly registered student with 0 sessions sees PRESENT DAYS 3 and LATE/ABSENT 1/0. Cause: the fallbacks `studentStats.presentCount || 3`, `lateCount || 1` and `attendanceRate || 88` (a real 0% would show as 88%), plus a fake default list for history at line 16. Remove these fallbacks.", "selector": "/student/attendance", "priority": "HIGH"},
+      {"component": "CoursePlayerPage handleSendMessage", "issue": "When POST /discussions fails (for example 403), the message is still added to the list on screen as if it was sent. The user gets no error. Show a toast error instead.", "selector": "discussion input", "priority": "MEDIUM"},
+      {"component": "CoursePlayerPage currentEnrolment", "issue": "Falls back to a fake enrolment {id:'demo_enrol', progress:50} when the student is not enrolled.", "selector": "/student/course/:id/learn", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Admin Reports CSV/JSON bundles", "issue": "The export files are hardcoded static strings (5 seeded users), not live data. Overview revenue CSV uses the mocked stats, which is expected.", "affected_selectors": ["Export CSV buttons on /admin/reports"]},
+      {"flow": "Slice defaults", "issue": "resultsSlice initialState.totalGradedCourses is still 2. The 'user_student_1' default arguments are still there in fetchResults and fetchEnrolments, and InstructorResults defaults selectedStudentId to 'user_student_1'.", "affected_selectors": []}
+    ],
+    "design_issues": [
+      {"screen": "Instructor Attendance", "issues": ["Session Date is still a native <input type=date>, not the shadcn calendar", "A course with 0 enrolled students shows an empty table with no empty-state message, and the Submit button is still enabled"]},
+      {"screen": "Student Attendance / Results tables", "issues": ["Still use the old rounded-card slate styling, which does not match the editorial redesign used on the other pages"]},
+      {"screen": "Landing", "issues": ["Section eyebrow 'CHAPTER II' (Featured) comes before 'CHAPTER I'"]},
+      {"screen": "Admin Reports chart", "issues": ["Revenue and enrolments share one colour and one Y axis, so the enrolments line looks flat at 0"]},
+      {"screen": "Create course", "issues": ["The main button says 'Publish Course' even when the status toggle is Draft"]}
+    ]
+  },
+  "verified_fixes": {
+    "1_demo_fixed_accounts": "PASS (also after new student and instructor sign-ups)",
+    "2_private_notification": "PASS - pytest socket client and two-browser UI: the student gets the 'Assignment Graded' toast, the instructor does not",
+    "3_lockout_429": "PASS (6th attempt returns 429)",
+    "4_enrol_missing_or_draft_404": "PASS",
+    "5_numeric_and_results_validation": "PASS for 'abc', >100, missing or non-student studentId, and another instructor's course (403). FAIL for nan/inf (see critical issue)",
+    "6_put_whitelist": "PASS (instructorId, enrolledCount, rating, id ignored; featured ignored for instructor)",
+    "7_discussions_access": "PASS (400 without courseId; 403 for non-enrolled student and non-owning instructor; 200 for enrolled student, owning instructor, admin)",
+    "8_instructor_scoping": "PASS",
+    "9_enrolments_studentName": "PASS",
+    "10_attendance_roster": "PASS (React course shows Alex and Sarah; Python AI course shows 0)",
+    "11_overview_open_assignments": "PASS (code check, and fresh student shows 0)",
+    "12_no_fake_numbers": "PARTIAL - Results page shows '—' GPA and a friendly message (PASS); Attendance page still shows fake 3 and 1/0 (FAIL)",
+    "13_reports_tooltip_light": "PASS (bg rgb(255,253,249), text rgb(28,25,23))",
+    "14_landing_3_featured": "PASS",
+    "15_restricted_page_navbar": "PASS"
+  },
+  "regression": "PASS: demo sign-in for all 3 roles; catalogue search, category and sort; signed-out enrol redirects to /sign-in; course player discussion (an instructor API post appears live, and the student's own UI message appears once); instructor creates a Draft course, which appears in My courses and is hidden from the catalogue; admin Overview CSV and Reports CSV download; at 390px the navbar menu and dashboard sidebar open with no horizontal overflow.",
+  "test_report_links": ["/app/backend/tests/test_learnflow_iter2_fixes.py", "/app/backend/tests/test_learnflow_api.py", "/app/test_reports/pytest/pytest_results_iter2.xml"],
+  "action_items": [
+    "HIGH: In num(), reject non-finite values (math.isfinite) with a 400, so 'nan'/'inf' are neither saved nor returned as 500",
+    "HIGH: Remove the fake fallbacks in StudentAttendance.jsx (|| 3, || 1, || 88, default history list)",
+    "Remove resultsSlice totalGradedCourses:2 and the 'user_student_1' defaults (resultsSlice, enrolmentsSlice, InstructorResults)",
+    "CoursePlayer: show an error toast instead of adding the message on screen when POST /discussions fails",
+    "Validate progress in PUT /enrolments/{id}/progress",
+    "Send assignment_graded and result_published only to the student's room",
+    "Replace the native date input in InstructorAttendance with the shadcn calendar; add an empty state for a roster with 0 students"
+  ],
+  "critical_code_review_comments": [
+    "num(): NaN and Infinity get through, and insert() runs before the response is encoded, so bad data is saved",
+    "Grade data is broadcast to every socket (assignment_graded, result_published)",
+    "The X-Forwarded-For based lockout can be bypassed by spoofing the header",
+    "AdminReports export data is hardcoded and does not reflect the DB",
+    "Auth uses Bearer tokens in localStorage, not httpOnly cookies. CORS is '*' with allow_credentials=False, which is consistent with that design. bcrypt hashes start with $2b$ (verified). seed() runs only when the users collection is empty, so it never resets the admin password"
+  ],
+  "updated_files": ["/app/backend/tests/test_learnflow_iter2_fixes.py"],
+  "success_rate": {"backend": "97% (35/36)", "frontend": "93% (14/15 fixes; regression 100%)"},
+  "seed_data_creation": "None kept. All TEST_ users, courses, assignments, submissions, discussions and notifications were cleaned up, and login_attempts was cleared.",
+  "flaky_tests": "When pytest runs with xdist in parallel (the pytest.ini default), test_courses_all_scoping and test_full_flow failed once with a non-JSON response, and test_discussions failed because of ordering when another worker posted at the same moment. All pass with -n 0. Run the suite serially: pytest tests/ -n 0",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run: REACT_APP_BACKEND_URL=... pytest /app/backend/tests -n 0 (takes about 2.5 min). The socket test uses python-socketio with polling transport (websocket-client is not installed). Toasts have no data-testid, so match them by text. CoursePlayer and InstructorAttendance have few testids. Clear login_attempts after running the lockout test."
+}

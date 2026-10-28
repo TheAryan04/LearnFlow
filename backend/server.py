@@ -7,6 +7,7 @@ load_dotenv(ROOT_DIR / ".env")
 import os
 import re
 import json
+import math
 import time
 import uuid
 import logging
@@ -99,6 +100,8 @@ def num(value, field: str, cast=float):
     try:
         out = cast(value)
     except (TypeError, ValueError):
+        raise ApiError(400, f"{field} must be a number")
+    if not math.isfinite(out):
         raise ApiError(400, f"{field} must be a number")
     if out < 0:
         raise ApiError(400, f"{field} cannot be negative")
@@ -467,7 +470,7 @@ async def update_progress(enrol_id: str, body: dict, user: dict = Depends(requir
     course = await find_one("courses", {"id": enrolment["courseId"]}) or {}
     total = sum(len(s.get("lessons") or []) for s in course.get("curriculum") or [])
     if body.get("progress") is not None:
-        progress = float(body["progress"])
+        progress = num(body["progress"], "Progress")
     else:
         progress = round(len(done) / total * 100) if total else 100
     updated = await update("enrolments", enrol_id, {
@@ -568,7 +571,7 @@ async def grade_submission(submission_id: str, body: dict, user: dict = Depends(
         raise ApiError(400, "Marks must be between 0 and the assignment maximum")
     marks = int(marks) if marks.is_integer() else marks
     updated = await update("submissions", submission_id, {"marks": marks, "feedback": body.get("feedback") or "Good work!", "status": "Graded"})
-    await sio.emit("assignment_graded", updated)
+    await sio.emit("assignment_graded", updated, room=f"user_{updated['studentId']}")
     await notify({"id": uid("notif"), "userId": updated["studentId"], "title": "Assignment Graded",
                   "message": f'Your submission for {asg["title"]} has been evaluated: {marks} marks.',
                   "date": "Just now", "read": False, "type": "success"})
@@ -662,7 +665,7 @@ async def publish_result(body: dict, user: dict = Depends(require_role("instruct
         await update("results", entry["id"], entry)
     else:
         await insert("results", entry)
-    await sio.emit("result_published", entry)
+    await sio.emit("result_published", entry, room=f"user_{sid}")
     await notify({"id": uid("notif"), "userId": sid, "title": "Final Grade Published",
                   "message": f'Your final score for {course.get("title", "Course")} has been published: {grade} ({entry["totalMarks"]}/100).',
                   "date": "Just now", "read": False, "type": "success"})
@@ -722,7 +725,7 @@ async def post_discussion(body: dict, user: dict = Depends(current_user)):
 @api.get("/stats/admin")
 async def admin_stats(_: dict = Depends(require_role("admin"))):
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    rev = [14200, 18400, 22100, 19800, 27500, 31200, 29800, 35600, 42100, 48900, 54200, 61800]
+    rev = [r * 83 for r in (14200, 18400, 22100, 19800, 27500, 31200, 29800, 35600, 42100, 48900, 54200, 61800)]
     enr = [420, 560, 680, 590, 820, 940, 890, 1080, 1250, 1430, 1610, 1840]
     return {"success": True, "data": {
         "totalUsers": await db.users.count_documents({}) + 1540,
@@ -740,7 +743,7 @@ async def instructor_stats(user: dict = Depends(require_role("instructor", "admi
         "coursesPublished": await db.courses.count_documents({"instructorId": user["id"]}),
         "pendingToGrade": await db.submissions.count_documents({"status": "Pending", "assignmentId": {"$in": [
             a["id"] for a in await find("assignments", {"courseId": {"$in": await scoped_course_ids(user) or []}})]}}),
-        "totalRevenue": "$42,850", "monthlyRevenue": "$6,420",
+        "totalRevenue": "₹35,56,550", "monthlyRevenue": "₹5,32,860",
     }}
 
 

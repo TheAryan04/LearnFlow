@@ -26,6 +26,7 @@ import { useToast } from '../../components/common/Toast';
 import FloatingElements from '../../components/ui/FloatingElements';
 import GlassCard from '../../components/ui/GlassCard';
 import Badge from '../../components/ui/Badge';
+import { formatPrice } from '../../utils/currency';
 
 const reveal = {
   hidden: { opacity: 0, y: 40 },
@@ -112,7 +113,7 @@ export default function CourseDetailPage() {
       <section className="max-w-7xl mx-auto w-full px-5 sm:px-8 pt-14 lg:pt-20 pb-16 grid lg:grid-cols-12 gap-12 items-start">
         <div className="lg:col-span-7 animate-slide-up">
           <Link to="/courses" className="text-sm text-ink-500 hover:text-ink-900" data-testid="course-detail-back-link">← Catalogue</Link>
-          <p className="lf-eyebrow mt-8 mb-4">{course.category} · {course.price ? `$${course.price}` : 'Free'}</p>
+          <p className="lf-eyebrow mt-8 mb-4">{course.category} · {formatPrice(course.price)}</p>
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-ink-900 leading-[1.02]" data-testid="course-detail-title">{course.title}</h1>
           <p className="mt-6 text-lg text-ink-600 leading-relaxed max-w-2xl">
             A structured curriculum with lessons, assignments and live discussion — taught by {course.instructorName}.
@@ -247,7 +248,7 @@ export default function CourseDetailPage() {
                 <div className="mb-5">
                   <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Enrollment Fee</span>
                   <div className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
-                    {course.price ? `$${course.price}` : 'Free'}
+                    {formatPrice(course.price)}
                   </div>
                 </div>
 

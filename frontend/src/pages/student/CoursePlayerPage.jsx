@@ -154,12 +154,7 @@ export default function CoursePlayerPage() {
       await api.post('/discussions', payload);
       setNewMessage('');
     } catch (err) {
-      // Local optimistic fallback
-      setMessages((prev) => [
-        ...prev,
-        { ...payload, id: `msg_${Date.now()}`, timestamp: new Date().toISOString() },
-      ]);
-      setNewMessage('');
+      toast.error(err.message || 'Message could not be sent');
     } finally {
       setSendingMessage(false);
     }

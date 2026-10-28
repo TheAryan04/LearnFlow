@@ -30,7 +30,7 @@ const resultsSlice = createSlice({
   initialState: {
     results: [],
     cumulativeGpa: 0,
-    totalGradedCourses: 2,
+    totalGradedCourses: 0,
     loading: false,
     error: null,
   },

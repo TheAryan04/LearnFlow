@@ -39,7 +39,7 @@
 }
 
 @layer components {
-  .lf-eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500; }
+  .lf-eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.12em] sm:tracking-[0.18em] text-ink-500; }
   .lf-title { @apply font-serif text-4xl sm:text-5xl lg:text-6xl text-ink-900 leading-[1.05]; }
   .lf-h2 { @apply font-serif text-2xl sm:text-3xl text-ink-900; }
   .lf-btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium transition-[background-color,transform,color,border-color] duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed; }
