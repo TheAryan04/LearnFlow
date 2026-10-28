@@ -1,0 +1,79 @@
+{
+  "theme": "Calm Editorial Study Journal",
+  "fonts": {
+    "display": "'Newsreader', serif",
+    "sans": "'Plus Jakarta Sans', sans-serif",
+    "google_fonts_import": "https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+  },
+  "colors": {
+    "paper": "#FBF9F5",
+    "surface": "#F4F0E8",
+    "surface_hover": "#EFEAE0",
+    "ink": "#1C1917",
+    "ink_muted": "#78716C",
+    "rule_divider": "#E7E5E4",
+    "accent": {
+      "main": "#8C3322",
+      "hover": "#73281B",
+      "light": "#F9EDE8",
+      "border": "#E8D0C5"
+    },
+    "feedback_muted": {
+      "success": "#2D5A3A",
+      "success_bg": "#EEF5F0",
+      "warning": "#8A5A00",
+      "warning_bg": "#FAF5EA",
+      "danger": "#991B1B",
+      "danger_bg": "#FDF2F2",
+      "info": "#2B4C6F",
+      "info_bg": "#F0F4F8"
+    },
+    "slate_warm_scale": {
+      "50": "#FAF8F5",
+      "100": "#F4F0E8",
+      "200": "#E7E2D7",
+      "300": "#D5CEBF",
+      "400": "#A8A090",
+      "500": "#78716C",
+      "600": "#57534E",
+      "700": "#44403C",
+      "800": "#292524",
+      "900": "#1C1917",
+      "950": "#0C0A09"
+    }
+  },
+  "radii": {
+    "default": "rounded-lg",
+    "card": "rounded-xl",
+    "button": "rounded-md",
+    "pill": "rounded-full"
+  },
+  "shadows": {
+    "soft": "0 2px 12px -2px rgba(28, 25, 23, 0.04)",
+    "card": "0 4px 20px -4px rgba(28, 25, 23, 0.06)",
+    "floating": "0 12px 32px -8px rgba(28, 25, 23, 0.12)"
+  },
+  "component_styles": {
+    "button_primary": "bg-[#8C3322] hover:bg-[#73281B] text-[#FAF8F5] px-5 py-2.5 rounded-md font-medium text-sm transition-all duration-200 shadow-sm active:scale-[0.98]",
+    "button_secondary": "bg-[#F4F0E8] hover:bg-[#EFEAE0] text-[#1C1917] border border-[#E7E5E4] px-5 py-2.5 rounded-md font-medium text-sm transition-all duration-200",
+    "button_ghost": "hover:bg-[#F4F0E8] text-[#44403C] hover:text-[#1C1917] px-4 py-2 rounded-md font-medium text-sm transition-colors",
+    "input": "bg-[#FAF8F5] border border-[#E7E2D7] focus:border-[#8C3322] focus:ring-1 focus:ring-[#8C3322] text-[#1C1917] placeholder:text-[#A8A090] rounded-md px-3.5 py-2 text-sm transition-all outline-none",
+    "card": "bg-[#F4F0E8]/60 border border-[#E7E2D7] rounded-xl p-6 transition-all hover:border-[#D5CEBF]",
+    "sidebar": "bg-[#F4F0E8] border-r border-[#E7E2D7] w-64 min-h-screen p-5 flex flex-col justify-between",
+    "table": "w-full text-left text-sm border-collapse",
+    "table_header": "border-b border-[#E7E2D7] text-[#78716C] font-semibold uppercase text-[11px] tracking-wider py-3 px-4",
+    "table_row": "border-b border-[#E7E5E4]/60 hover:bg-[#F4F0E8]/50 transition-colors"
+  },
+  "motion": {
+    "page_transition": "animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out",
+    "hover_lift": "hover:-translate-y-0.5 transition-transform duration-200",
+    "subtle_fade": "transition-opacity duration-200 ease-in-out"
+  },
+  "image_urls": {
+    "hero_study": "https://images.unsplash.com/photo-1643148636630-0b0fb138fc74?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODF8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwcmVhZGluZyUyMGxpYnJhcnklMjB3YXJtJTIwc3R1ZHklMjBqb3VybmFsfGVufDB8fHx8MTc5MzIxNzgyNHww&ixlib=rb-4.1.0&q=85"
+  },
+  "testing_attributes": {
+    "rule": "All key interactive elements, form fields, buttons, tables, navigation links, and state cards must include data-testid in kebab-case."
+  },
+  "instructions_to_main_agent": "Ensure React JS components (.js files) use clean tailwind styles remapped in tailwind.config.js. Maintain the calm, warm editorial feel with serif headings ('font-serif') and clean sans body text ('font-sans'). Never use harsh high-contrast black/white gradients or Inter/Roboto fonts."
+}

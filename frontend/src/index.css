@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 38% 97%;
+    --foreground: 24 10% 10%;
+    --border: 40 21% 88%;
+    --input: 40 21% 88%;
+    --ring: 9 61% 34%;
+    --radius: 0.5rem;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-paper text-ink-900 min-h-screen font-sans antialiased;
+    margin: 0;
+    background-image: radial-gradient(rgba(28, 25, 23, 0.035) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  ::selection { background: #F0D9CF; color: #1C1917; }
+
+  #root { min-height: 100vh; display: flex; flex-direction: column; isolation: isolate; }
+
+  h1, h2, h3 { font-family: 'Newsreader', Georgia, serif; font-weight: 500; letter-spacing: -0.01em; }
+
+  .font-black, .font-extrabold { font-weight: 600 !important; }
+  h1.font-bold, h2.font-bold, h3.font-bold, .font-display.font-bold { font-weight: 500; }
+
+  @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-fade-in { animation: fade-in 0.5s ease-out both; }
+  @keyframes slide-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-slide-up { animation: slide-up 0.5s cubic-bezier(.2,.7,.2,1) both; }
+
+  :focus-visible { outline: 2px solid #8C3322; outline-offset: 2px; }
+}
+
+@layer components {
+  .lf-eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500; }
+  .lf-title { @apply font-serif text-4xl sm:text-5xl lg:text-6xl text-ink-900 leading-[1.05]; }
+  .lf-h2 { @apply font-serif text-2xl sm:text-3xl text-ink-900; }
+  .lf-btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium transition-[background-color,transform,color,border-color] duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed; }
+  .lf-btn-primary { @apply lf-btn bg-terra-600 text-ink-50 hover:bg-terra-700 shadow-sm; }
+  .lf-btn-secondary { @apply lf-btn bg-surface text-ink-900 border border-rule hover:bg-surface-hover; }
+  .lf-btn-ghost { @apply lf-btn text-ink-700 hover:bg-surface hover:text-ink-900; }
+  .lf-input { @apply w-full bg-ink-50 border border-rule rounded-md px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 outline-none transition-[border-color,box-shadow] focus:border-terra-600 focus:ring-1 focus:ring-terra-600; }
+  .lf-card { @apply bg-white/70 border border-rule rounded-xl transition-[border-color,transform] duration-200 hover:border-ink-300; }
+  .lf-rule { @apply border-t border-rule; }
+  .lf-link { @apply underline decoration-terra-300 underline-offset-4 hover:decoration-terra-600 transition-colors; }
+}
+
+@layer utilities {
+  .glass { @apply bg-white/70 border border-rule shadow-soft; }
+  .glass-strong { @apply bg-white border border-rule shadow-card; }
+  .text-balance { text-wrap: balance; }
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #D5CEBF; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #A8A090; }
+
+  .bg-clip-text.text-transparent { -webkit-text-fill-color: currentColor; color: #8C3322; background: none; font-style: italic; }
+
+  .ql-toolbar.ql-snow, .ql-container.ql-snow { border-color: #E7E2D7 !important; background: #FAF8F5; }
+  .ql-toolbar.ql-snow { border-radius: 0.5rem 0.5rem 0 0; }
+  .ql-container.ql-snow { border-radius: 0 0 0.5rem 0.5rem; }
+  .ql-editor { min-height: 180px; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 0.95rem; line-height: 1.65; }
+
+  .quill-viewer { line-height: 1.75; color: #44403C; }
+  .quill-viewer h1 { font-family: 'Newsreader', serif; font-size: 1.875rem; margin: 1rem 0 0.5rem; color: #1C1917; }
+  .quill-viewer h2 { font-family: 'Newsreader', serif; font-size: 1.5rem; margin: 0.875rem 0 0.5rem; color: #1C1917; }
+  .quill-viewer h3 { font-family: 'Newsreader', serif; font-size: 1.25rem; margin: 0.75rem 0 0.375rem; color: #1C1917; }
+  .quill-viewer p { margin-bottom: 0.75rem; }
+  .quill-viewer ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+  .quill-viewer ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+  .quill-viewer blockquote { border-left: 3px solid #8C3322; padding-left: 1rem; font-family: 'Newsreader', serif; font-style: italic; font-size: 1.1rem; margin: 1rem 0; color: #57534E; }
+  .quill-viewer pre { background: #292524; color: #F4F0E8; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0; font-family: monospace; }
+}
+
+@layer base {
+  [data-testid="dashboard-main"] h1.text-2xl, [data-testid="dashboard-main"] h1.text-3xl { font-size: 2.5rem; line-height: 1.1; }
+  [data-testid="dashboard-main"] h1 + p { margin-top: 0.5rem; font-size: 0.875rem; }
+}
