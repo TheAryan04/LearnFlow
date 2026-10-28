@@ -45,10 +45,11 @@ export default function NotificationBell() {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         aria-label="View notifications"
+        data-testid="navbar-notification-bell"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-4 h-4 text-[10px] font-bold text-white bg-accent rounded-full flex items-center justify-center animate-pulse">
+          <span data-testid="navbar-notification-badge" className="absolute top-1.5 right-1.5 w-4 h-4 text-[10px] font-bold text-white bg-accent rounded-full flex items-center justify-center animate-pulse">
             {unreadCount}
           </span>
         )}
@@ -70,6 +71,7 @@ export default function NotificationBell() {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAll}
+                data-testid="navbar-notifications-mark-all"
                 className="text-xs text-accent hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <CheckCheck className="w-3.5 h-3.5" />

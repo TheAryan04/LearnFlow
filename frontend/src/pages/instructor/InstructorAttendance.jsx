@@ -24,10 +24,16 @@ export default function InstructorAttendance() {
 
   // Load students for the selected course
   useEffect(() => {
-    api
-      .get('/users', { params: { role: 'Student' } })
-      .then((res) => {
-        if (res.data) {
+    if (!selectedCourseId) return;
+    Promise.all([
+      api.get('/users', { params: { role: 'Student' } }),
+      api.get('/enrolments', { params: { courseId: selectedCourseId } }),
+    ])
+      .then(([usersRes, enrolRes]) => {
+        const enrolled = new Set(enrolRes.data.map((e) => e.userId));
+        const roster = usersRes.data.filter((s) => enrolled.has(s.id));
+        {
+          const res = { data: roster };
           setStudents(res.data);
           // Default all to Present
           const initialMap = {};
@@ -37,8 +43,9 @@ export default function InstructorAttendance() {
           setAttendanceMap(initialMap);
         }
       })
-      .catch((err) => console.log('Error fetching students:', err));
-  }, []);
+      .catch((err) => toast.error(err.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCourseId]);
 
   const handleStatusChange = (studentId, status) => {
     setAttendanceMap((prev) => ({

@@ -154,7 +154,7 @@ export default function LandingPage() {
       <main className="flex-1">
         <Hero />
         <div className="border-y border-rule bg-paper"><div className="max-w-7xl mx-auto px-5 sm:px-8"><Marquee items={ANNOUNCEMENTS} /></div></div>
-        <FeaturedCourses courses={courses.slice(0, 6)} loading={loading} onEnrol={handleEnrol} />
+        <FeaturedCourses courses={courses.slice(0, 3)} loading={loading} onEnrol={handleEnrol} />
         <ForEveryone />
         <Notes />
         <Closing />

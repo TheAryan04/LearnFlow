@@ -32,6 +32,7 @@ db = client[os.environ["DB_NAME"]]
 JWT_SECRET = os.environ["JWT_SECRET"]
 DEMO_ENABLED = os.environ.get("ENABLE_DEMO_LOGIN", "false").lower() == "true"
 SEED_PASSWORD = os.environ.get("SEED_USER_PASSWORD")
+DEMO_ACCOUNTS = {"student": "alex.student@learnflow.edu", "instructor": "marcus.vance@learnflow.edu", "admin": "admin@learnflow.edu"}
 UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 PROJ = {"_id": 0, "_order": 0}
@@ -94,13 +95,23 @@ async def update(col: str, item_id: str, changes: dict) -> Optional[dict]:
     return await find_one(col, {"id": item_id})
 
 
+def num(value, field: str, cast=float):
+    try:
+        out = cast(value)
+    except (TypeError, ValueError):
+        raise ApiError(400, f"{field} must be a number")
+    if out < 0:
+        raise ApiError(400, f"{field} cannot be negative")
+    return out
+
+
 def public_user(user: dict) -> dict:
     return {k: v for k, v in user.items() if k != "passwordHash"}
 
 
 async def notify(notif: dict):
     await insert("notifications", notif)
-    await sio.emit("notification", notif)
+    await sio.emit("notification", notif, room=f"user_{notif['userId']}" if notif.get("userId") else None)
 
 
 # ---------- auth ----------
@@ -179,7 +190,8 @@ async def register(body: dict):
 @api.post("/auth/login")
 async def login(body: dict, request: Request):
     email = str(body.get("email") or "").strip().lower()
-    ident = f"{request.client.host if request.client else 'x'}:{email}"
+    ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "x")).split(",")[0].strip()
+    ident = f"{ip}:{email}"
     attempt = await db.login_attempts.find_one({"identifier": ident})
     if attempt and attempt.get("count", 0) >= 5 and attempt["last"] > time.time() - 900:
         raise ApiError(429, "Too many attempts. Try again in 15 minutes")
@@ -197,8 +209,8 @@ async def login(body: dict, request: Request):
 async def demo_login(body: dict):
     if not DEMO_ENABLED:
         raise ApiError(404, "Not found")
-    role = str(body.get("role") or "").capitalize()
-    user = await db.users.find_one({"role": role, "status": {"$ne": "Deactivated"}}, PROJ, sort=[("_order", -1)])
+    email = DEMO_ACCOUNTS.get(str(body.get("role") or "").lower())
+    user = email and await db.users.find_one({"email": email, "status": {"$ne": "Deactivated"}}, PROJ)
     if not user:
         raise ApiError(404, "Demo account not found")
     return session(user)
@@ -287,7 +299,7 @@ async def create_course(body: dict, user: dict = Depends(require_role("instructo
     preview = body.get("previewYoutubeUrl") or "https://www.youtube.com/watch?v=bMknfKXIFA8"
     course = {
         "id": uid("course"), "title": body["title"], "category": body.get("category") or "Development",
-        "price": float(body.get("price") or 0), "rating": 5.0, "reviewCount": 0,
+        "price": num(body.get("price") or 0, "Price"), "rating": 5.0, "reviewCount": 0,
         "instructorId": body.get("instructorId") if user["role"] == "admin" and body.get("instructorId") else user["id"],
         "instructorName": user["name"], "instructorAvatar": user.get("avatar"),
         "thumbnail": body.get("thumbnail") or "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80",
@@ -316,7 +328,12 @@ async def owned_course(course_id: str, user: dict) -> dict:
 @api.put("/courses/{course_id}")
 async def update_course(course_id: str, body: dict, user: dict = Depends(require_role("instructor", "admin"))):
     await owned_course(course_id, user)
-    changes = {k: v for k, v in body.items() if k not in ("id", "instructorId", "instructorName", "_id", "_order")}
+    editable = ("title", "category", "price", "thumbnail", "description", "curriculum", "previewYoutubeUrl", "status", "level", "language", "shortDescription", "featured")
+    changes = {k: v for k, v in body.items() if k in editable}
+    if "featured" in changes and user["role"] != "admin":
+        changes.pop("featured")
+    if "price" in changes:
+        changes["price"] = num(changes["price"], "Price")
     if youtube_id(body.get("previewYoutubeUrl")):
         changes["previewYoutubeId"] = youtube_id(body["previewYoutubeUrl"])
     updated = await update("courses", course_id, changes)
@@ -416,6 +433,8 @@ async def enrol(body: dict, user: dict = Depends(require_role("student"))):
     if not course_id:
         raise ApiError(400, "courseId is required")
     course = await find_one("courses", {"id": course_id})
+    if not course or course.get("status") != "published":
+        raise ApiError(404, "Course not found")
     existing = await find_one("enrolments", {"userId": user["id"], "courseId": course_id})
     if existing:
         return {"success": True, "message": "Already enrolled", "data": {**existing, "course": course}}
@@ -480,7 +499,7 @@ async def create_assignment(body: dict, user: dict = Depends(require_role("instr
         "id": uid("asg"), "courseId": course["id"], "courseTitle": course["title"], "title": body["title"],
         "description": body.get("description") or "<p>Please complete this assignment.</p>",
         "deadline": body.get("deadline") or (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
-        "maxMarks": int(body.get("maxMarks") or 100), "createdAt": today(),
+        "maxMarks": num(body.get("maxMarks") or 100, "Max marks", int), "createdAt": today(),
     }
     await insert("assignments", assignment)
     await sio.emit("new_assignment", assignment)
@@ -560,6 +579,9 @@ async def grade_submission(submission_id: str, body: dict, user: dict = Depends(
 @api.get("/attendance")
 async def list_attendance(courseId: Optional[str] = None, studentId: Optional[str] = None, user: dict = Depends(current_user)):
     records = await find("attendance", {"courseId": courseId} if courseId else {})
+    if user["role"] == "instructor":
+        ids = await scoped_course_ids(user)
+        records = [r for r in records if r["courseId"] in ids]
     if studentId:
         sid = user["id"] if user["role"] == "student" else studentId
         counts = {"Present": 0, "Late": 0, "Absent": 0}
@@ -584,7 +606,7 @@ async def record_attendance(body: dict, user: dict = Depends(require_role("instr
     course_id, date = body.get("courseId"), body.get("date")
     if not course_id or not date:
         raise ApiError(400, "courseId and date are required")
-    course = await find_one("courses", {"id": course_id}) or {}
+    course = await owned_course(course_id, user)
     existing = await find_one("attendance", {"courseId": course_id, "date": date})
     entry = {"id": existing["id"] if existing else uid("att"), "courseId": course_id,
              "courseTitle": course.get("title", "Course Attendance"), "date": date, "records": body.get("records") or []}
@@ -611,6 +633,9 @@ def compute_grade(m: float):
 async def list_results(studentId: Optional[str] = None, user: dict = Depends(current_user)):
     query = {"studentId": user["id"]} if user["role"] == "student" else ({"studentId": studentId} if studentId else {})
     results = await find("results", query)
+    if user["role"] == "instructor":
+        ids = await scoped_course_ids(user)
+        results = [r for r in results if r["courseId"] in ids]
     gpa = round(sum(float(r.get("gpa") or 0) for r in results) / len(results), 2) if results else 0.0
     return {"success": True, "data": {"results": results, "cumulativeGpa": gpa, "totalGradedCourses": len(results)}}
 
@@ -620,8 +645,12 @@ async def publish_result(body: dict, user: dict = Depends(require_role("instruct
     course_id, total = body.get("courseId"), body.get("totalMarks")
     if not course_id or total is None:
         raise ApiError(400, "courseId and totalMarks are required")
-    total = float(total)
-    course = await find_one("courses", {"id": course_id}) or {}
+    total = num(total, "Total marks")
+    if total > 100:
+        raise ApiError(400, "Total marks must be between 0 and 100")
+    if not body.get("studentId") or not await db.users.find_one({"id": body["studentId"], "role": "Student"}):
+        raise ApiError(400, "A valid studentId is required")
+    course = await owned_course(course_id, user)
     grade, gpa = compute_grade(total)
     sid = body.get("studentId")
     existing = await find_one("results", {"studentId": sid, "courseId": course_id})
@@ -667,8 +696,10 @@ async def read_one(notif_id: str, user: dict = Depends(current_user)):
 
 # ---------- discussions ----------
 @api.get("/discussions")
-async def list_discussions(courseId: Optional[str] = None, _: dict = Depends(current_user)):
-    items = await find("discussions", {"courseId": courseId} if courseId else {})
+async def list_discussions(courseId: str, user: dict = Depends(current_user)):
+    if not await can_access_course(user, courseId):
+        raise ApiError(403, "You do not have access to this course")
+    items = await find("discussions", {"courseId": courseId})
     items.sort(key=lambda d: d.get("timestamp") or "")
     return {"success": True, "count": len(items), "data": items}
 
@@ -677,6 +708,8 @@ async def list_discussions(courseId: Optional[str] = None, _: dict = Depends(cur
 async def post_discussion(body: dict, user: dict = Depends(current_user)):
     if not body.get("courseId") or not str(body.get("message") or "").strip():
         raise ApiError(400, "courseId and message are required")
+    if not await can_access_course(user, body["courseId"]):
+        raise ApiError(403, "You do not have access to this course")
     post = {"id": uid("disc"), "courseId": body["courseId"], "userId": user["id"], "userName": user["name"],
             "userAvatar": user.get("avatar"), "role": user["role"].capitalize(),
             "message": str(body["message"]).strip()[:4000], "timestamp": now_iso()}
@@ -705,7 +738,8 @@ async def instructor_stats(user: dict = Depends(require_role("instructor", "admi
     return {"success": True, "data": {
         "totalStudents": 11370,
         "coursesPublished": await db.courses.count_documents({"instructorId": user["id"]}),
-        "pendingToGrade": await db.submissions.count_documents({"status": "Pending"}),
+        "pendingToGrade": await db.submissions.count_documents({"status": "Pending", "assignmentId": {"$in": [
+            a["id"] for a in await find("assignments", {"courseId": {"$in": await scoped_course_ids(user) or []}})]}}),
         "totalRevenue": "$42,850", "monthlyRevenue": "$6,420",
     }}
 
@@ -726,6 +760,7 @@ async def connect(sid, environ, auth):
     if not user:
         raise socketio.exceptions.ConnectionRefusedError("Authentication required")
     await sio.save_session(sid, {"id": user["id"], "name": user["name"], "role": user["role"], "avatar": user.get("avatar")})
+    await sio.enter_room(sid, f"user_{user['id']}")
 
 
 @sio.event

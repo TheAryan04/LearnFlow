@@ -10,7 +10,7 @@ export default function StudentAttendance() {
   const { studentStats, loading } = useSelector((state) => state.attendance);
 
   useEffect(() => {
-    dispatch(fetchAttendance({ studentId: user?.id || 'user_student_1' }));
+    dispatch(fetchAttendance({ studentId: user?.id }));
   }, [dispatch, user]);
 
   const history = studentStats.history || [

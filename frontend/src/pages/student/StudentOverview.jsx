@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { BookOpen, CalendarCheck, ArrowRight, FileCheck, TrendingUp, Clock } from 'lucide-react';
 import { fetchEnrolments } from '../../redux/slices/enrolmentsSlice';
-import { fetchAssignments } from '../../redux/slices/assignmentsSlice';
+import { fetchAssignments, fetchSubmissions } from '../../redux/slices/assignmentsSlice';
 import { fetchAttendance } from '../../redux/slices/attendanceSlice';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import StatCard from '../../components/ui/StatCard';
@@ -54,18 +54,23 @@ export default function StudentOverview() {
   const dispatch = useDispatch();
   const { user } = useSelector((s) => s.auth);
   const { enrolments, loading } = useSelector((s) => s.enrolments);
-  const { assignments } = useSelector((s) => s.assignments);
+  const { assignments, submissions } = useSelector((s) => s.assignments);
   const { studentStats } = useSelector((s) => s.attendance);
 
   useEffect(() => {
     if (!user?.id) return;
     dispatch(fetchEnrolments(user.id));
     dispatch(fetchAssignments());
+    dispatch(fetchSubmissions({ studentId: user.id }));
     dispatch(fetchAttendance({ studentId: user.id }));
   }, [dispatch, user?.id]);
 
   const ongoing = enrolments.filter((e) => e.progress < 100);
-  const upcoming = assignments.slice(0, 4);
+  const submittedIds = new Set(submissions.map((s) => s.assignmentId));
+  const upcoming = assignments
+    .filter((a) => !submittedIds.has(a.id) && new Date(a.deadline) > new Date())
+    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+    .slice(0, 4);
   const avg = enrolments.length ? Math.round(enrolments.reduce((a, e) => a + (e.progress || 0), 0) / enrolments.length) : 0;
 
   return (

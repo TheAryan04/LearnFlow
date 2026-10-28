@@ -56,7 +56,7 @@ export default function StudentSubmitAssignment() {
     setSubmitting(true);
 
     const formData = new FormData();
-    formData.append('studentId', user?.id || 'user_student_1');
+    formData.append('studentId', user?.id);
     formData.append('studentName', user?.name || 'Alex Johnson');
     formData.append('notes', notes);
     if (selectedFile) {

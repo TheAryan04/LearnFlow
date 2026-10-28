@@ -123,13 +123,12 @@ const REPORT_CATALOG = [
 ];
 
 const chartTooltipStyle = {
-  backgroundColor: 'rgba(15, 23, 42, 0.94)',
-  borderRadius: '16px',
-  border: '1px solid rgba(148, 163, 184, 0.22)',
-  color: '#fff',
+  backgroundColor: '#FFFDF9',
+  borderRadius: '8px',
+  border: '1px solid #E7E2D7',
+  color: '#1C1917',
   fontSize: '12px',
-  boxShadow: '0 24px 48px -16px rgba(2, 6, 23, 0.65)',
-  backdropFilter: 'blur(14px)',
+  boxShadow: '0 12px 32px -8px rgba(28,25,23,0.12)',
 };
 
 export default function AdminReports() {

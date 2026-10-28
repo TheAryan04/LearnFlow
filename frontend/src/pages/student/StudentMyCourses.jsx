@@ -36,7 +36,7 @@ export default function StudentMyCourses() {
   const [viewMode, setViewMode] = useState('grid');
 
   useEffect(() => {
-    dispatch(fetchEnrolments(user?.id || 'user_student_1'));
+    dispatch(fetchEnrolments(user?.id));
   }, [dispatch, user]);
 
   const filteredEnrolments = enrolments.filter((e) => {

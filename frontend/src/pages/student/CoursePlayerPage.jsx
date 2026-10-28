@@ -47,7 +47,7 @@ export default function CoursePlayerPage() {
   useEffect(() => {
     if (courseId) {
       dispatch(fetchCourseById(courseId));
-      dispatch(fetchEnrolments(user?.id || 'user_student_1'));
+      dispatch(fetchEnrolments(user?.id));
 
       // Fetch initial course discussion history
       api
@@ -143,7 +143,7 @@ export default function CoursePlayerPage() {
     setSendingMessage(true);
     const payload = {
       courseId,
-      userId: user?.id || 'user_student_1',
+      userId: user?.id,
       userName: user?.name || 'Alex Johnson',
       userAvatar: user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
       role: role || 'Student',

@@ -1,0 +1,70 @@
+{
+  "summary": "First full E2E run of the LearnFlow redesign (FastAPI + React). Backend: 24 pytest API tests covering auth, courses, enrolments, assignments, submissions with file upload, grading, attendance, results, notifications, discussions, stats and users. 21 passed and 3 failed. Frontend: Playwright checks on landing, catalogue, course detail, sign-in/up, every student/instructor/admin page, notification bell, live discussion, role-restricted page and the 390px mobile sidebar. All requested flows work end to end. When testing began the preview served a STALE webpack bundle (old catalogue design without data-testids). Restarting the frontend fixed it.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/auth/demo", "issue": "Demo login returns the NEWEST active user of that role (sort _order desc). After any new Student/Instructor sign-up, the 'Student'/'Instructor' demo buttons log into that new person's account. Reproduced: after registering a test student, demo-student logged in as 'TEST Stu2'. Fix: map each role to a fixed seeded email (alex.student@ / marcus.vance@ / admin@).", "priority": "HIGH"},
+      {"endpoint": "socket 'notification' event (notify())", "issue": "sio.emit('notification') broadcasts to ALL sockets, including private notifications that have a userId. App.jsx toasts every one without filtering. Reproduced: the instructor saw the toast 'Your submission for TEST_Asg has been evaluated: 44 marks' meant for the student. Fix: emit to a per-user room (join user_{id} on connect) when userId is set, or filter client-side by notif.userId.", "priority": "HIGH"},
+      {"endpoint": "POST /api/auth/login (brute-force lockout)", "issue": "The lockout never triggers. The identifier uses request.client.host, which is the ingress pod IP and changes between requests (seen in DB: 10.232.131.2 count 4, 10.232.135.73 count 2). Six bad attempts all return 401 and never 429. Fix: use the first IP in X-Forwarded-For, or key on email only.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/enrolments", "issue": "Enrolling in a courseId that does not exist (or a draft course) returns 201 and creates an orphan enrolment. The student overview then shows a blank course card. Should return 404 (and reject drafts)."},
+      {"endpoint": "POST /api/courses", "issue": "price='abc' gives a 500 (float() ValueError). Same risk for float(totalMarks) in POST /results and int(maxMarks) in POST /assignments. Validate the input and return 400."},
+      {"endpoint": "POST /api/results", "issue": "studentId is optional. If it is missing, a result with studentId=None is stored and the notification is broadcast to everyone."},
+      {"endpoint": "GET /api/stats/instructor", "issue": "pendingToGrade counts Pending submissions across ALL instructors, not only the caller's courses."},
+      {"endpoint": "GET /api/discussions, /api/attendance, /api/results", "issue": "No course scoping. Any logged-in user can read any course's discussion. An instructor can read every result and attendance record, including other instructors' courses (the instructor Results page lists the UI/UX course result)."},
+      {"endpoint": "PUT /api/courses/{id}", "issue": "Mass assignment: owners can overwrite enrolledCount, rating, reviewCount and similar fields."},
+      {"endpoint": "POST /api/assignments/{id}/submit", "issue": "Resubmitting a Graded submission silently wipes marks and feedback back to Pending. Confirm this is intended."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "StudentOverview", "issue": "'Open assignments' stat, the greeting text and 'Due soon' use assignments.slice(0,4) and ignore submission status and deadlines. Alex had submitted all 3 assignments, yet the page said '3 assignments open' and offered 'Submit'.", "selector": "[data-testid=student-overview-greeting]", "priority": "MEDIUM"},
+      {"component": "StudentAttendance / StudentResults", "issue": "Fake numbers from hardcoded Redux initialState. attendanceSlice has presentCount 3, lateCount 1, rate 88. resultsSlice has cumulativeGpa 3.9. A new student with no data saw 'Total sessions 0' next to 'Present days 3, Late 1', and 'Cumulative GPA 3.90 / Distinction Honor Standing' with 0 graded courses. StudentResults also falls back to the hardcoded id 'user_student_1'. Use zeroed initial state and hide the distinction card when there are no results.", "selector": "/student/attendance, /student/results", "priority": "MEDIUM"},
+      {"component": "InstructorAttendance", "issue": "The roster lists every student on the platform, not only students enrolled in the selected course.", "selector": "/instructor/attendance", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Dev server hot reload", "issue": "At test start, the bundle on localhost:3000 and on the public URL was stale: it contained 'Explore the Catalog' and no 'catalogue-grid' even though the source was rewritten. touch did not trigger a rebuild. 'sudo supervisorctl restart frontend' fixed it, and hot reload worked afterwards. Main agent: if changes do not show up, restart the frontend.", "affected_selectors": ["[data-testid=catalogue-grid]"]}
+    ],
+    "design_issues": [
+      {"screen": "Admin Reports chart", "issues": ["Tooltip is a dark navy box with dark-red text ('Enrolments : 560'): low contrast and a leftover of the old look", "The enrolments series sits flat on the revenue axis (needs a second y-axis)"]},
+      {"screen": "Landing featured courses", "issues": ["4 cards in a 3-column grid leave 1 orphan card on the second row; use 3 or 6 cards, or a 4-column grid"]},
+      {"screen": "Role restricted page", "issues": ["Content hugs the far-left edge with no navbar or brand; centre it in a max-width container"]},
+      {"screen": "Auth pages (sign-in/up)", "issues": ["The form column starts at x=65 while the navbar content starts at x=288, so the alignment is inconsistent", "On the Student demo card the two-line subtitle pushes its icon and title out of line with the other two cards"]},
+      {"screen": "Instructor Assignments / Attendance", "issues": ["Uses the native browser datetime-local/date pickers instead of the shadcn Calendar", "Submissions table has no assignment-title column, so you cannot tell which assignment a row belongs to"]},
+      {"screen": "Instructor My courses", "issues": ["Delete uses native window.confirm instead of a styled dialog"]},
+      {"screen": "Admin Users / Courses search", "issues": ["Search icon is barely visible and the input has almost no border"]},
+      {"screen": "Course player", "issues": ["The curriculum column does not stretch the full page height when you scroll down to the discussion"]},
+      {"screen": "Dashboard mobile", "issues": ["Two menu toggles (navbar hamburger and the 'Menu' button) is redundant"]},
+      {"screen": "Seed data", "issues": ["User 'Jai mehta' with a real-looking gmail address (pikkaboo46@gmail.com), joined today, appears in the admin and instructor rosters. Check whether this is a real person's data."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_learnflow_api.py", "/app/backend/tests/conftest.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Make /api/auth/demo deterministic: fixed seeded email per role",
+    "Scope socket 'notification' emits to the target user (room per user), or filter by userId in App.jsx",
+    "Fix the brute-force identifier: use X-Forwarded-For first IP, or the email alone",
+    "POST /enrolments: return 404 for missing courses and reject drafts",
+    "Validate numeric fields (price, totalMarks, maxMarks) and return 400 instead of 500; require studentId in POST /results",
+    "StudentOverview: count only unsubmitted assignments that are not past their deadline",
+    "Remove hardcoded initialState stats in attendanceSlice/resultsSlice and the 'user_student_1' fallback",
+    "Instructor attendance roster: limit to students enrolled in the selected course",
+    "Scope discussions/results/attendance reads and stats.pendingToGrade to the caller's courses",
+    "Design fixes: Reports tooltip contrast, featured grid orphan, centred restricted page, shadcn date pickers"
+  ],
+  "critical_code_review_comments": [
+    "server.py is 796 lines; split it into routers (auth, courses, coursework, stats, socket)",
+    "Endpoints take raw dict bodies with no Pydantic models, so a bad type becomes a 500",
+    "Playbook check: bcrypt hashes are $2b$ (OK). JWT is kept in localStorage and sent as a Bearer token; no httpOnly cookies are set. CORS_ORIGINS='*' with allow_credentials=False, so there are no explicit origins. Seeding runs only when the users collection is empty (idempotent, never resets passwords). Lockout is implemented but broken behind the ingress (see backend critical).",
+    "Socket CORS is cors_allowed_origins='*'",
+    "Many legacy pages (course player, student assignments/submit, instructor assignments/attendance/results/materials, admin users/courses) have almost no data-testids. I added navbar-notification-bell, navbar-notification-badge and navbar-notifications-mark-all to NotificationBell.jsx.",
+    "NotificationBell still uses bg-white/slate/dark: classes instead of the new design tokens"
+  ],
+  "updated_files": ["/app/backend/tests/test_learnflow_api.py", "/app/backend/tests/conftest.py", "/app/frontend/src/components/common/NotificationBell.jsx (data-testids only)"],
+  "success_rate": {"backend": "87.5% (21/24)", "frontend": "~90% (every requested flow works; data-correctness and design issues listed above)"},
+  "test_credentials": "/app/memory/test_credentials.md is EMPTY (header only). The credentials from the review request work: alex.student@learnflow.edu / marcus.vance@learnflow.edu / admin@learnflow.edu with password LearnFlow@2026. Main agent should write them into the file.",
+  "seed_data_creation": "Test-created users, courses, assignments, materials, discussions and notifications were cleaned up. Side effects that remain: Alex's result for course_react_mastery is now 72/B (overwritten by the UI test), Alex completed lesson 3 of React (progress 75%), an attendance session for 2026-10-28 on course_react_mastery, notifications read for Alex, and Alex's asg_2 submission was resubmitted (Pending).",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Run: cd /app/backend && REACT_APP_BACKEND_URL=... pytest tests/ -n 0. conftest.py cleans TEST_ data after the session (needed because demo login picks the newest user per role). The 3 expected failures are lockout, bad price → 500, and enrolment in a nonexistent course. Course player, assignments, attendance and results pages need text/role selectors because they lack testids. If the UI looks like the old design, restart the frontend (stale bundle seen once).",
+  "rca of the issue": "1) Demo hijack: demo_login uses find_one(role, sort _order desc); registered users get _order=time.time(), which is far larger than the seed _order values (1-5). 2) Notification leak: notify() calls sio.emit without room/to, and App.jsx handleNotification has no userId check. 3) Lockout: ident = request.client.host:email, and the host is a rotating ingress pod IP. 4) Fake stats: hardcoded attendanceSlice.initialState.studentStats and resultsSlice.cumulativeGpa=3.9; the student pages render these before or instead of real data."
+}

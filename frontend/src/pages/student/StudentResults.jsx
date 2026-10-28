@@ -11,7 +11,7 @@ export default function StudentResults() {
   const { results, cumulativeGpa, loading } = useSelector((state) => state.results);
 
   useEffect(() => {
-    dispatch(fetchResults(user?.id || 'user_student_1'));
+    dispatch(fetchResults(user?.id));
   }, [dispatch, user]);
 
   const handleDownloadTranscript = () => {
@@ -55,33 +55,25 @@ export default function StudentResults() {
         </button>
       </div>
 
-      {/* GPA Score Card Banner */}
-      <div className="bg-ink-900 text-white p-6 sm:p-8 rounded-3xl shadow-elevated flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="max-w-md">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-xs font-semibold mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Academic Performance Record</span>
-          </div>
-          <h2 className="text-2xl font-extrabold tracking-tight">
-            Distinction Honor Standing
-          </h2>
-          <p className="text-xs text-slate-200 mt-1.5 leading-relaxed">
-            Your cumulative GPA places you in the top 5% of this engineering cohort. Maintain 3.8+ to receive verified institution honors.
+      <section className="grid sm:grid-cols-3 gap-8 border-t border-ink-900 pt-6" data-testid="results-gpa-summary">
+        <div>
+          <p className="lf-eyebrow">Cumulative GPA</p>
+          <p className="font-serif text-6xl text-ink-900 mt-3 tabular-nums" data-testid="results-cumulative-gpa">{results.length ? cumulativeGpa.toFixed(2) : '—'}</p>
+          <p className="text-xs text-ink-500 mt-1">on a 4.00 scale</p>
+        </div>
+        <div>
+          <p className="lf-eyebrow">Graded courses</p>
+          <p className="font-serif text-6xl text-ink-900 mt-3 tabular-nums">{results.length}</p>
+        </div>
+        <div className="sm:self-end">
+          <p className="font-serif italic text-lg text-ink-600 leading-snug">
+            {!results.length ? 'No results have been published yet. They will appear here once your instructor releases them.'
+              : cumulativeGpa >= 3.8 ? 'Distinction standing — a remarkable record.'
+              : cumulativeGpa >= 3.0 ? 'Good standing — keep the momentum going.'
+              : 'Every course is a fresh page. Keep going.'}
           </p>
         </div>
-
-        <div className="flex items-center gap-6 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
-          <div className="text-center">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">
-              Cumulative GPA
-            </span>
-            <div className="text-4xl font-extrabold text-white mt-1">
-              {cumulativeGpa ? cumulativeGpa.toFixed(2) : '3.90'}
-            </div>
-            <span className="text-[10px] text-amber-300 font-semibold">Scale 4.00</span>
-          </div>
-        </div>
-      </div>
+      </section>
 
       {/* Results Grade Table */}
       <div className="bg-white dark:bg-cardDark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-soft overflow-hidden">

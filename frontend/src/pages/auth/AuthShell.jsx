@@ -9,7 +9,7 @@ export default function AuthShell({ eyebrow, title, subtitle, children, footer }
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <div className="flex-1 grid lg:grid-cols-2">
-        <div className="flex items-center px-6 sm:px-12 lg:px-20 py-14">
+        <div className="flex items-center px-5 sm:px-8 lg:pr-16 lg:pl-[max(2rem,calc((100vw-80rem)/2+2rem))] py-14">
           <div className="w-full max-w-md animate-slide-up">
             <p className="lf-eyebrow mb-4">{eyebrow}</p>
             <h1 className="font-serif text-4xl sm:text-5xl text-ink-900 leading-[1.05]">{title}</h1>

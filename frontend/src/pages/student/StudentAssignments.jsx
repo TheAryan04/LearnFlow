@@ -42,7 +42,7 @@ export default function StudentAssignments() {
 
   useEffect(() => {
     dispatch(fetchAssignments());
-    dispatch(fetchSubmissions({ studentId: user?.id || 'user_student_1' }));
+    dispatch(fetchSubmissions({ studentId: user?.id }));
   }, [dispatch, user]);
 
   const getSubmissionForAssignment = (asgId) => {

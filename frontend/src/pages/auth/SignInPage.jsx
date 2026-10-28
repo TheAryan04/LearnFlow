@@ -10,7 +10,7 @@ import { setSocketToken } from '../../utils/socket';
 import AuthShell, { authLink } from './AuthShell';
 
 const DEMOS = [
-  { role: ROLES.STUDENT, desc: 'Courses & coursework', icon: BookOpen },
+  { role: ROLES.STUDENT, desc: 'Learn & submit', icon: BookOpen },
   { role: ROLES.INSTRUCTOR, desc: 'Teach & grade', icon: Presentation },
   { role: ROLES.ADMIN, desc: 'Run the school', icon: ShieldCheck },
 ];

@@ -51,28 +51,26 @@ import AdminReports from './pages/admin/AdminReports';
 function RealTimeSyncWrapper({ children }) {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const userId = useSelector((state) => state.auth.user?.id);
   const toast = useToast();
+  const toastRef = React.useRef(toast);
+  toastRef.current = toast;
 
   useEffect(() => {
-    // Initial fetch of unread notifications
     if (isAuthenticated) dispatch(fetchNotifications());
 
-    // Listen to real-time events broadcast from server
     const handleNotification = (notif) => {
-      if (isAuthenticated) dispatch(fetchNotifications());
-      if (notif.type === 'success') {
-        toast.success(notif.message);
-      } else {
-        toast.info(notif.message);
-      }
+      if (!isAuthenticated || (notif.userId && notif.userId !== userId)) return;
+      dispatch(fetchNotifications());
+      if (notif.type === 'success') toastRef.current.success(notif.message);
+      else toastRef.current.info(notif.message);
     };
 
     socket.on('notification', handleNotification);
-
     return () => {
       socket.off('notification', handleNotification);
     };
-  }, [dispatch, toast, isAuthenticated]);
+  }, [dispatch, isAuthenticated, userId]);
 
   return children;
 }

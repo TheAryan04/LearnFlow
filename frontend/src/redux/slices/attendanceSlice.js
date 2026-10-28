@@ -30,11 +30,11 @@ const attendanceSlice = createSlice({
   initialState: {
     sessions: [],
     studentStats: {
-      totalSessions: 4,
-      presentCount: 3,
-      lateCount: 1,
+      totalSessions: 0,
+      presentCount: 0,
+      lateCount: 0,
       absentCount: 0,
-      attendanceRate: 88,
+      attendanceRate: 100,
       history: [],
     },
     loading: false,
