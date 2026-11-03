@@ -5,7 +5,7 @@ import { currentUser, requireRole } from '../auth.js';
 import { emit, emitToUser, notify, canAccessCourse } from '../realtime.js';
 import { saveUpload, readFile } from '../storage.js';
 import { scopedCourseIds, inScope } from '../scope.js';
-import { ownedCourse } from './courses.js';
+import { ownedCourse } from '../services/course.service.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
