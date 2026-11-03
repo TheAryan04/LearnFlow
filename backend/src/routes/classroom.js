@@ -3,7 +3,7 @@ import { ApiError, db, find, findOne, insert, update, uid, today, num, ok, creat
 import { currentUser, requireRole } from '../auth.js';
 import { emit, emitToUser, notify } from '../realtime.js';
 import { scopedCourseIds, inScope } from '../scope.js';
-import { ownedCourse } from './courses.js';
+import { ownedCourse } from '../services/course.service.js';
 
 const GRADES = [[90, 'A+', 4.0], [80, 'A', 3.8], [75, 'B+', 3.4], [70, 'B', 3.0], [60, 'C+', 2.5], [50, 'C', 2.0], [40, 'D', 1.5]];
 const computeGrade = (m) => (GRADES.find(([limit]) => m >= limit) || [0, 'F', 0.0]).slice(1);
