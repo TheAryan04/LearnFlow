@@ -20,11 +20,11 @@ export async function listMaterials(user, courseId) {
 
 export async function createMaterial(user, body, file) {
   const { title, courseId = 'course_react_mastery', fileType } = body || {};
-  if (!title) throw new ApiError(400, 'Material title is required');
+  if (typeof title !== 'string' || !title.trim() || title.trim().length > 160) throw new ApiError(400, 'Material title must be between 1 and 160 characters');
   await ownedCourse(courseId, user);
   const upload = await saveUpload(file, user.id, courseId);
   const material = {
-    id: uid('mat'), courseId, title,
+    id: uid('mat'), courseId, title: title.trim(),
     fileType: fileType || (upload?.type ? upload.type.split('/').pop().toUpperCase() : 'PDF'),
     size: upload ? `${(upload.size / 1048576).toFixed(1)} MB` : '3.2 MB',
     uploadedDate: today(), url: upload ? upload.url : '#',
@@ -45,13 +45,18 @@ export async function listAssignments(user, courseId) {
 }
 
 export async function createAssignment(user, body) {
-  if (!body?.title || !body?.courseId) throw new ApiError(400, 'Title and Course are required');
+  if (typeof body?.title !== 'string' || !body.title.trim() || body.title.trim().length > 160 || !body?.courseId) {
+    throw new ApiError(400, 'A course and an assignment title of at most 160 characters are required');
+  }
   const course = await ownedCourse(body.courseId, user);
+  const deadline = body.deadline || new Date(Date.now() + 7 * 864e5).toISOString();
+  if (typeof deadline !== 'string' || Number.isNaN(Date.parse(deadline))) throw new ApiError(400, 'Deadline must be a valid date');
+  const maxMarks = num(body.maxMarks ?? 100, 'Max marks', { int: true });
+  if (maxMarks < 1) throw new ApiError(400, 'Max marks must be at least 1');
   const assignment = {
-    id: uid('asg'), courseId: course.id, courseTitle: course.title, title: body.title,
+    id: uid('asg'), courseId: course.id, courseTitle: course.title, title: body.title.trim(),
     description: body.description || '<p>Please complete this assignment.</p>',
-    deadline: body.deadline || new Date(Date.now() + 7 * 864e5).toISOString(),
-    maxMarks: num(body.maxMarks || 100, 'Max marks', { int: true }), createdAt: today(),
+    deadline: new Date(deadline).toISOString(), maxMarks, createdAt: today(),
   };
   await insert('assignments', assignment);
   return { assignment, course };
@@ -98,7 +103,7 @@ export async function gradeSubmission(user, submissionId, body) {
   const assignment = submission && await findOne('assignments', { id: submission.assignmentId });
   if (!submission || !assignment) throw new ApiError(404, 'Submission not found');
   await ownedCourse(assignment.courseId, user);
-  const marks = num(body?.marks, 'Marks', { max: assignment.maxMarks });
+  const marks = num(body?.marks, 'Marks', { int: true, max: assignment.maxMarks });
   const updated = await update('submissions', submission.id, {
     marks, feedback: body?.feedback || 'Good work!', status: 'Graded',
   });
