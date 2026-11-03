@@ -73,17 +73,32 @@ All five domain route modules now delegate request handling to dedicated control
 6. Keep `src/core.js` as a compatibility facade for existing imports.
 7. Keep backend integration tests in `backend/tests/` until their runner and CI paths are updated together.
 
+## MVP hardening
+
+The backend is intentionally kept as a modular monolith for the MVP. The current baseline includes:
+
+- Public signup defaults to the Student role; elevated roles are assigned by an administrator or the verified-email admin allowlist.
+- Request and domain checks for course titles/status, assignment marks/deadlines, attendance dates/records, and account status.
+- Course enrolment is required before a student can submit coursework.
+- Baseline browser security headers, configurable CORS for HTTP and Socket.IO, and bounded JSON/file payloads.
+- Graceful process shutdown for Socket.IO and MongoDB.
+- MongoDB indexes for common course, enrolment, coursework, attendance, discussion, and notification lookups.
+- Dashboard counts are based on stored records; revenue is not reported because payment/revenue data is not modelled.
+
+Avoid adding Redis, queues, Elasticsearch, microservices, or a separate cache until a real MVP requirement justifies them.
+
 ## Verification
 
-The refactor has been committed to a dedicated pull-request branch. Runtime, build, and integration tests have not yet been executed in this environment. Run the project's configured backend and frontend checks before merging.
-
-Backend:
+Backend unit tests use Node's built-in test runner:
 
 ```bash
 cd backend
 npm install
+npm test
 npm run dev
 ```
+
+The API integration tests in `backend/tests/test_node_api.py` and `backend/tests/test_node_realtime_files.py` are Python/pytest suites and require a configured running API plus their test environment variables. Runtime, build, and integration tests have not been executed as part of these source edits; run the checks before merging.
 
 Frontend:
 
