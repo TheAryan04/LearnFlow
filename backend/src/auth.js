@@ -70,16 +70,14 @@ async function clerkProfile(claims, body) {
       emailVerified: true,
       name: [p.firstName, p.lastName].filter(Boolean).join(' ') || p.username,
       avatar: p.imageUrl,
-      metaRole: p.unsafeMetadata?.role,
     };
   }
   const claimEmail = typeof claims.email === 'string' ? claims.email.toLowerCase() : '';
   return {
     email: claimEmail || String(body.email || '').toLowerCase().slice(0, 200),
-    emailVerified: Boolean(claimEmail),
+    emailVerified: claims.email_verified === true,
     name: (typeof claims.name === 'string' && claims.name.trim()) || String(body.name || '').slice(0, 120),
     avatar: (typeof claims.image === 'string' && claims.image) || (/^https:\/\//.test(body.avatar || '') ? body.avatar : undefined),
-    metaRole: body.role,
   };
 }
 
@@ -93,8 +91,9 @@ async function syncClerkUser(claims, body = {}) {
     if (isAdmin && existing.role !== 'Admin') changes.role = 'Admin';
     return update('users', existing.id, changes);
   }
-  const requested = String(body.role || profile.metaRole || 'student').toLowerCase();
-  const role = isAdmin ? 'Admin' : requested === 'instructor' ? 'Instructor' : 'Student';
+  // Public sign-up must never grant elevated roles from client-controlled profile data.
+  // New accounts are Students; administrators are provisioned only through the email allowlist.
+  const role = isAdmin ? 'Admin' : 'Student';
   return insert('users', {
     id: uid('user'), clerkId: claims.sub, name, email: profile.email, role,
     avatar: profile.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(name)}`,
