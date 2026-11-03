@@ -1,6 +1,6 @@
 import { ApiError, find, findOne, insert, update, uid, num, db } from '../core.js';
 
-const YT_RE = /(?:youtu\\.be\\/|youtube\\.com\\/(?:embed\\/|v\\/|watch\\?v=|watch\\?.+&v=))([\\w-]{11})/;
+const YT_RE = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/;
 const youtubeId = (url) => (String(url || '').match(YT_RE) || [])[1] || null;
 const EDITABLE = ['title', 'category', 'price', 'thumbnail', 'description', 'curriculum', 'previewYoutubeUrl', 'status', 'level', 'language', 'shortDescription', 'featured'];
 const SORTS = { popular: ['enrolledCount', -1], 'price-low': ['price', 1], 'price-high': ['price', -1], rating: ['rating', -1] };
