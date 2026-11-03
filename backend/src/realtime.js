@@ -54,3 +54,13 @@ export function initRealtime(server) {
     });
   });
 }
+
+
+export function closeRealtime() {
+  if (!io) return Promise.resolve();
+  const current = io;
+  io = null;
+  return new Promise((resolve, reject) => {
+    current.close((error) => error ? reject(error) : resolve());
+  });
+}
