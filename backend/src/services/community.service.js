@@ -1,4 +1,4 @@
-import { ApiError, db, find, findOne, update, uid, nowIso, publicUser } from '../core.js';
+import { ApiError, db, find, findOne, insert, update, uid, nowIso, publicUser } from '../core.js';
 import { canAccessCourse } from '../realtime.js';
 import { scopedCourseIds } from '../scope.js';
 
@@ -60,7 +60,6 @@ export async function createDiscussion(user, { courseId, message }) {
     role: user.role[0].toUpperCase() + user.role.slice(1),
     message: String(message).trim().slice(0, 4000), timestamp: nowIso(),
   };
-  const { insert } = await import('../core.js');
   await insert('discussions', post);
   return post;
 }
