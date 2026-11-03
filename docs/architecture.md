@@ -71,7 +71,7 @@ All five domain route modules now delegate request handling to dedicated control
 4. Keep Socket.IO path, event names, and room naming unchanged.
 5. Keep the existing upload/storage adapter unchanged.
 6. Keep `src/core.js` as a compatibility facade for existing imports.
-7. Keep backend integration tests in `backend_tests/` until their runner and CI paths are updated together.
+7. Keep backend integration tests in `backend/tests/` until their runner and CI paths are updated together.
 
 ## Verification
 
