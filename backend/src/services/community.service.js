@@ -27,6 +27,7 @@ export async function changeUserStatus(actor, userId, requestedStatus) {
   if (!user) throw new ApiError(404, 'User not found');
   if (user.id === actor.id) throw new ApiError(400, 'You cannot deactivate your own account');
   const status = requestedStatus || (user.status === 'Active' ? 'Deactivated' : 'Active');
+  if (!['Active', 'Deactivated'].includes(status)) throw new ApiError(400, 'Status must be Active or Deactivated');
   return publicUser(await update('users', userId, { status }));
 }
 
@@ -66,26 +67,25 @@ export async function createDiscussion(user, { courseId, message }) {
 
 export async function adminStats() {
   return {
-    totalUsers: (await db.collection('users').countDocuments()) + 1540,
-    totalCourses: (await db.collection('courses').countDocuments()) + 42,
-    totalEnrolments: (await db.collection('enrolments').countDocuments()) + 13280,
-    activeThisMonth: 3420,
-    revenueChartData: MONTHS.map((month, index) => ({
-      month, revenue: REVENUE[index] * USD_TO_INR, enrolments: ENROLMENTS[index],
-    })),
+    totalUsers: await db.collection('users').countDocuments(),
+    totalCourses: await db.collection('courses').countDocuments(),
+    totalEnrolments: await db.collection('enrolments').countDocuments(),
+    activeThisMonth: await db.collection('users').countDocuments({ joinedDate: { $gte: today().slice(0, 7) + '-01' } }),
+    // Revenue is not modelled yet; do not present fabricated financial figures.
   };
 }
 
 export async function instructorStats(user) {
   const courseIds = (await scopedCourseIds(user)) ?? (await find('courses')).map((course) => course.id);
   const assignmentIds = (await find('assignments', { courseId: { $in: courseIds } })).map((item) => item.id);
+  const enrolments = await find('enrolments', { courseId: { $in: courseIds } });
   return {
-    totalStudents: 11370,
-    coursesPublished: await db.collection('courses').countDocuments({ instructorId: user.id }),
+    totalStudents: new Set(enrolments.map((item) => item.userId)).size,
+    coursesPublished: await db.collection('courses').countDocuments({ instructorId: user.id, status: 'published' }),
     pendingToGrade: await db.collection('submissions').countDocuments({
       status: 'Pending', assignmentId: { $in: assignmentIds },
     }),
-    totalRevenue: '₹35,56,550',
-    monthlyRevenue: '₹5,32,860',
+    totalRevenue: null,
+    monthlyRevenue: null,
   };
 }
