@@ -1,0 +1,36 @@
+import express from 'express';
+import cors from 'cors';
+import { authRouter } from './auth.js';
+import courses from './routes/courses.js';
+import enrolments from './routes/enrolments.js';
+import coursework from './routes/coursework.js';
+import classroom from './routes/classroom.js';
+import community from './routes/community.js';
+
+const app = express();
+
+app.use(cors({
+  origin: (process.env.CORS_ORIGINS || '*').split(','),
+  allowedHeaders: ['Authorization', 'Content-Type', 'Accept'],
+}));
+app.use(express.json({ limit: '2mb' }));
+
+app.use('/api', authRouter, courses, enrolments, coursework, classroom, community);
+
+app.use('/api', (_req, res) =>
+  res.status(404).json({ success: false, message: 'Not found' })
+);
+
+app.use((err, _req, res, _next) => {
+  const status = err.status || (
+    err.type === 'entity.parse.failed' || err.name === 'MulterError' ? 400 : 500
+  );
+  if (status >= 500) console.error(err);
+  res.status(status).json({
+    success: false,
+    message: status >= 500 ? 'Internal server error' : err.message,
+    ...(err.code ? { code: err.code } : {}),
+  });
+});
+
+export default app;
