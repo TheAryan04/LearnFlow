@@ -7,6 +7,7 @@ test('num accepts valid non-negative numeric values', () => {
   assert.equal(num('12.5', 'Price'), 12.5);
   assert.equal(num(100, 'Progress', { max: 100 }), 100);
   assert.equal(num('4', 'Count', { int: true }), 4);
+  assert.throws(() => num(4.5, 'Count', { int: true }), ApiError);
 });
 
 test('num rejects invalid, negative, and out-of-range values', () => {
