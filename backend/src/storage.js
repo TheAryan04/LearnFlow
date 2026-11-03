@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile as fsReadFile, writeFile, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db, uid, nowIso } from './core.js';
@@ -52,7 +52,6 @@ export async function saveUpload(file, ownerId, courseId) {
     await db.collection('files').insertOne(record);
   } catch (error) {
     // Avoid leaving an orphaned file when metadata persistence fails.
-    const { unlink } = await import('node:fs/promises');
     await unlink(absolutePath).catch(() => {});
     throw error;
   }
@@ -71,5 +70,5 @@ export async function readFile(record) {
 }
 
 async function readFileFromDisk(storagePath) {
-  return readFile(resolveStoragePath(storagePath));
+  return fsReadFile(resolveStoragePath(storagePath));
 }
