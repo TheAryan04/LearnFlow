@@ -24,7 +24,10 @@ export async function notify(notif) {
 }
 
 export function initRealtime(server) {
-  io = new Server(server, { path: '/api/socket.io', cors: { origin: '*' } });
+  const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+    : '*';
+  io = new Server(server, { path: '/api/socket.io', cors: { origin: allowedOrigins } });
 
   io.use(async (socket, next) => {
     const { user } = await resolveToken(socket.handshake.auth?.token);
