@@ -7,7 +7,7 @@
 - MongoDB using the existing native `mongodb` driver.
 - Clerk for user authentication.
 - Socket.IO for real-time events.
-- Local filesystem storage for uploaded course materials and submissions.
+- Cloudinary for uploaded course materials and assignment submissions.
 
 No LLM provider or AI API is required by the application.
 
@@ -16,7 +16,6 @@ No LLM provider or AI API is required by the application.
 ```text
 backend/
 ├── server.js
-├── uploads/              # Runtime file data; keep out of version control
 ├── src/
 │   ├── app.js
 │   ├── config/
@@ -43,23 +42,27 @@ backend/
 - **Repositories:** centralize MongoDB collection operations using the native driver.
 - **Config:** initialize infrastructure such as MongoDB.
 - **Middleware/auth:** authenticate users and enforce roles.
-- **Realtime/storage:** provide Socket.IO and local filesystem-backed file persistence.
+- **Realtime/storage:** provide Socket.IO and Cloudinary-backed file persistence.
 
 All five domain route modules delegate request handling to dedicated controller modules. Course, enrolment, coursework, classroom, and community business operations live in corresponding service modules.
 
-## File storage
+## Cloudinary file storage
 
-Uploaded files are stored under `backend/uploads` by default. Set `FILE_STORAGE_DIR` to an absolute or relative directory to choose another location. MongoDB stores file metadata and the relative storage path; downloads continue through the authenticated `/api/files/:id` endpoint.
+Set either `CLOUDINARY_URL` or all three variables `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` in `backend/.env`. Keep credentials server-side and never put the API secret in frontend environment variables.
 
-The uploads directory contains runtime user data. Back it up separately and do not commit it to Git. Local filesystem storage is suitable for a single-instance MVP; use a shared persistent volume or an S3-compatible adapter before running multiple API instances or ephemeral hosting.
+New uploads are sent from the Express backend to Cloudinary using the Node SDK. MongoDB stores the Cloudinary public ID, resource type, secure delivery URL, and existing file metadata. The application continues to serve files through the authenticated `/api/files/:id` route, which checks authorization before retrieving the asset. Cloudinary URLs are not returned in API responses.
+
+Files uploaded before this migration using local filesystem storage remain readable from `backend/uploads` as a backward-compatibility fallback. New files use Cloudinary. Existing Emergent object-storage files are not automatically migrated.
+
+The backend upload route currently limits files to 25 MB. Configure a persistent backup/export process for important Cloudinary assets and metadata.
 
 ## Compatibility decisions
 
-1. Keep collection names and stored document fields unchanged.
+1. Keep collection names and stored document fields unchanged where possible.
 2. Keep API URLs, status codes, and response envelopes unchanged.
 3. Keep Clerk token verification and demo-login behavior unchanged.
 4. Keep Socket.IO path, event names, and room naming unchanged.
-5. Keep the file metadata API and authenticated download route unchanged while replacing the external storage provider with local disk.
+5. Keep the file metadata API and authenticated download route unchanged while using Cloudinary for new uploads.
 6. Keep `src/core.js` as a compatibility facade for existing imports.
 7. Keep backend integration tests in `backend/tests/` until their runner and CI paths are updated together.
 
@@ -100,7 +103,7 @@ yarn start
 
 ## Follow-up work
 
-- Add automated regression coverage for the preserved API contracts.
+- Add automated regression coverage for Cloudinary upload, metadata persistence, and authorized download.
 - Add domain-specific repositories if query logic grows beyond the shared collection repository.
 - Audit frontend feature boundaries and consolidate duplicate API/service helpers.
 - Move backend tests only after updating their execution and CI configuration.
