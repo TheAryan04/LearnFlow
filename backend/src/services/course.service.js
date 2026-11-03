@@ -37,7 +37,10 @@ export async function ownedCourse(courseId, user) {
 }
 
 export async function createCourse(body, user) {
-  if (!body.title) throw new ApiError(400, 'Course title is required');
+  const title = typeof body.title === 'string' ? body.title.trim() : '';
+  if (!title || title.length > 160) throw new ApiError(400, 'Course title is required and must be at most 160 characters');
+  const status = body.status || 'draft';
+  if (!['draft', 'published'].includes(status)) throw new ApiError(400, 'Course status must be draft or published');
   let owner = await findOne('users', { id: user.id });
   if (user.role === 'admin' && body.instructorId) {
     owner = await findOne('users', { id: body.instructorId, role: 'Instructor' });
@@ -46,11 +49,11 @@ export async function createCourse(body, user) {
   if (!owner) throw new ApiError(404, 'Instructor profile not found');
   const preview = body.previewYoutubeUrl || 'https://www.youtube.com/watch?v=bMknfKXIFA8';
   const course = {
-    id: uid('course'), title: body.title, category: body.category || 'Development',
+    id: uid('course'), title, category: body.category || 'Development',
     price: num(body.price ?? 0, 'Price'), rating: 5.0, reviewCount: 0,
     instructorId: owner.id, instructorName: owner.name, instructorAvatar: owner.avatar,
     thumbnail: body.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
-    durationMs: 7200000, enrolledCount: 0, status: body.status || 'draft', featured: false,
+    durationMs: 7200000, enrolledCount: 0, status, featured: false,
     previewYoutubeUrl: preview, previewYoutubeId: youtubeId(preview) || 'bMknfKXIFA8',
     description: body.description || '<p>Welcome to this course.</p>', curriculum: body.curriculum || [], reviews: [],
   };
@@ -62,8 +65,17 @@ export async function createCourse(body, user) {
 export async function updateCourse(courseId, user, body) {
   await ownedCourse(courseId, user);
   const changes = Object.fromEntries(Object.entries(body || {}).filter(([k]) => EDITABLE.includes(k)));
-  if ('featured' in changes && user.role !== 'admin') delete changes.featured;
+  if ('title' in changes) {
+    if (typeof changes.title !== 'string' || !changes.title.trim() || changes.title.trim().length > 160) {
+      throw new ApiError(400, 'Course title must be between 1 and 160 characters');
+    }
+    changes.title = changes.title.trim();
+  }
+  if ('status' in changes && !['draft', 'published'].includes(changes.status)) {
+    throw new ApiError(400, 'Course status must be draft or published');
+  }
   if ('price' in changes) changes.price = num(changes.price, 'Price');
+  if ('featured' in changes && user.role !== 'admin') delete changes.featured;
   if (youtubeId(changes.previewYoutubeUrl)) changes.previewYoutubeId = youtubeId(changes.previewYoutubeUrl);
   return update('courses', courseId, changes);
 }
