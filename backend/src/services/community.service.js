@@ -3,10 +3,6 @@ import { canAccessCourse } from '../realtime.js';
 import { scopedCourseIds } from '../scope.js';
 
 const visibleTo = (user) => ({ $or: [{ userId: null }, { userId: { $exists: false } }, { userId: user.id }] });
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const REVENUE = [14200, 18400, 22100, 19800, 27500, 31200, 29800, 35600, 42100, 48900, 54200, 61800];
-const ENROLMENTS = [420, 560, 680, 590, 820, 940, 890, 1080, 1250, 1430, 1610, 1840];
-const USD_TO_INR = 83;
 
 export async function listUsers(user, requestedRole) {
   const role = user.role === 'instructor' ? 'student' : requestedRole;
