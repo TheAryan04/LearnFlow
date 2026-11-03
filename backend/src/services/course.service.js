@@ -24,12 +24,13 @@ export const listManagedCourses = (user) =>
 
 export async function getCourse(id) {
   const course = await findOne('courses', { id });
-  if (!course) throw new ApiError(404, 'Course not found');
+  if (!course || course.status !== 'published') throw new ApiError(404, 'Course not found');
   return course;
 }
 
 export async function ownedCourse(courseId, user) {
-  const course = await getCourse(courseId);
+  const course = await findOne('courses', { id: courseId });
+  if (!course) throw new ApiError(404, 'Course not found');
   if (user.role !== 'admin' && course.instructorId !== user.id) {
     throw new ApiError(403, "Cannot modify another instructor's course");
   }
