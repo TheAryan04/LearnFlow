@@ -14,8 +14,8 @@ LearnFlow is a learning management system with student, instructor, and administ
 
 - `frontend/` — React application
 - `backend/` — Express API and MongoDB integration
-- `backend_tests/` — API and real-time integration tests
-- `plan/`, `memory/`, `test_reports/` — project/agent workflow artifacts
+- `backend/tests/` — Node unit tests and Python API/realtime integration tests
+- `docs/` — architecture and project documentation
 
 ## Run locally
 
@@ -37,7 +37,7 @@ yarn install
 yarn start
 ```
 
-See [docs/architecture.md](docs/architecture.md) for the backend layering decision and the staged refactoring plan.
+Run backend unit tests with `cd backend && npm test`. See [docs/architecture.md](docs/architecture.md) for the MVP architecture, security baseline, and verification guidance.
 
 ## Database choice
 
