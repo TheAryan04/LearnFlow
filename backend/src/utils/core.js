@@ -13,8 +13,9 @@ export function num(value, field, { int = false, max } = {}) {
     throw new ApiError(400, `${field} must be a number`);
   }
   if (out < 0) throw new ApiError(400, `${field} cannot be negative`);
+  if (int && !Number.isInteger(out)) throw new ApiError(400, `${field} must be a whole number`);
   if (max !== undefined && out > max) throw new ApiError(400, `${field} must be between 0 and ${max}`);
-  return int ? Math.trunc(out) : out;
+  return out;
 }
 
 export const publicUser = (user) => {
