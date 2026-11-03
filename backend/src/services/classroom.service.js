@@ -35,7 +35,7 @@ export async function listAttendance(user, { courseId, studentId }) {
 export async function recordAttendance(user, { courseId, date, records = [] }) {
   if (!courseId || !date) throw new ApiError(400, 'courseId and date are required');
   const course = await ownedCourse(courseId, user);
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`))) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`))) {
     throw new ApiError(400, 'date must be a valid YYYY-MM-DD date');
   }
   if (!Array.isArray(records)) throw new ApiError(400, 'records must be an array');
