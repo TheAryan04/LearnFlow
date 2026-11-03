@@ -76,6 +76,9 @@ export async function listSubmissions(user, { assignmentId, studentId }) {
 export async function submitAssignment(user, assignmentId, body, file) {
   const assignment = await findOne('assignments', { id: assignmentId });
   if (!assignment) throw new ApiError(404, 'Assignment not found');
+  if (!(await db.collection('enrolments').findOne({ userId: user.id, courseId: assignment.courseId }))) {
+    throw new ApiError(403, 'Enrol in this course before submitting its assignment');
+  }
   const existing = await findOne('submissions', { assignmentId: assignment.id, studentId: user.id });
   const upload = await saveUpload(file, user.id, assignment.courseId);
   const submission = {
