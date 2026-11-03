@@ -10,62 +10,92 @@
 
 Mongoose is intentionally not introduced. Existing collections, document shapes, IDs, and API response envelopes remain the source of truth.
 
-## Backend layers
+## Backend structure
 
 ```text
 backend/
-├── server.js                  # process bootstrap and lifecycle
+├── server.js
 ├── src/
-│   ├── app.js                 # Express middleware and route composition
+│   ├── app.js
 │   ├── config/
-│   │   └── database.js        # MongoClient and database connection
+│   │   └── database.js
+│   ├── controllers/
+│   │   ├── courses.controller.js
+│   │   ├── enrolments.controller.js
+│   │   ├── coursework.controller.js
+│   │   ├── classroom.controller.js
+│   │   └── community.controller.js
 │   ├── repositories/
 │   │   └── collection.repository.js
+│   ├── services/
+│   │   ├── course.service.js
+│   │   ├── enrolment.service.js
+│   │   ├── coursework.service.js
+│   │   ├── classroom.service.js
+│   │   └── community.service.js
+│   ├── routes/
+│   │   ├── courses.js
+│   │   ├── enrolments.js
+│   │   ├── coursework.js
+│   │   ├── classroom.js
+│   │   └── community.js
 │   ├── utils/
-│   │   ├── core.js            # shared response, ID, date and number helpers
-│   │   └── errors.js          # ApiError
-│   ├── routes/                # HTTP endpoint declarations (legacy handlers retained)
-│   ├── auth.js                # Clerk/session authentication (legacy module)
-│   ├── realtime.js            # Socket.IO integration (legacy module)
-│   ├── scope.js               # role/course access scope
-│   ├── seed.js                # seed data
-│   └── storage.js             # file storage integration
+│   │   ├── core.js
+│   │   └── errors.js
+│   ├── auth.js
+│   ├── clerk.js
+│   ├── realtime.js
+│   ├── scope.js
+│   ├── seed.js
+│   └── storage.js
 └── package.json
 ```
 
-### Responsibilities
+## Layer responsibilities
 
-- **Routes:** expose the existing HTTP paths and preserve request/response contracts.
-- **Controllers (next extraction phase):** own HTTP request/response orchestration; route handlers currently remain inline to avoid a risky all-at-once rewrite.
-- **Services (next extraction phase):** own multi-step business workflows such as enrolment, grading, notifications, and uploads.
-- **Repositories:** own MongoDB reads/writes. The generic collection repository currently centralizes the existing query helpers.
-- **Config:** initialize external infrastructure.
-- **Middleware:** authentication, authorization, request validation, and error handling.
+- **Routes:** declare HTTP paths and attach authentication/authorization middleware.
+- **Controllers:** translate HTTP requests into service calls and format responses.
+- **Services:** implement domain workflows and business rules.
+- **Repositories:** centralize MongoDB collection operations using the native driver.
+- **Config:** initialize infrastructure such as MongoDB.
+- **Middleware/auth:** authenticate users and enforce roles.
+- **Realtime/storage:** preserve Socket.IO and file-storage integrations.
 
-## Compatibility strategy
+All five domain route modules now delegate request handling to dedicated controller modules. Course, enrolment, coursework, classroom, and community business operations live in corresponding service modules.
+
+## Compatibility decisions
 
 1. Keep collection names and stored document fields unchanged.
 2. Keep API URLs, status codes, and response envelopes unchanged.
 3. Keep Clerk token verification and demo-login behavior unchanged.
 4. Keep Socket.IO path, event names, and room naming unchanged.
 5. Keep the existing upload/storage adapter unchanged.
-6. Keep `src/core.js` as a compatibility facade while modules are migrated.
-7. Extract route controllers and domain-specific services incrementally, with regression tests for each domain.
+6. Keep `src/core.js` as a compatibility facade for existing imports.
+7. Keep backend integration tests in `backend_tests/` until their runner and CI paths are updated together.
 
 ## Verification
 
-Run from `backend/`:
+The refactor has been committed to a dedicated pull-request branch. Runtime, build, and integration tests have not yet been executed in this environment. Run the project's configured backend and frontend checks before merging.
+
+Backend:
 
 ```bash
+cd backend
 npm install
 npm run dev
 ```
 
-Run the existing integration tests in the environment configured for the project. The Python tests in the repository root's `backend_tests/` directory expect a running API and project-specific environment variables; they are not standalone unit tests.
+Frontend:
 
-## Known follow-up work
+```bash
+cd frontend
+yarn install
+yarn start
+```
 
-- Extract each route module into controller + service modules.
-- Add domain-specific repositories (users, courses, enrolments, assignments, submissions).
-- Move backend integration tests into the backend package only after updating their environment paths and CI references.
-- Add a root workspace script only after confirming the deployment and Emergent runner expectations.
+## Follow-up work
+
+- Add automated regression coverage for the preserved API contracts.
+- Add domain-specific repositories if query logic grows beyond the shared collection repository.
+- Audit frontend feature boundaries and consolidate duplicate API/service helpers.
+- Move backend tests only after updating their execution and CI configuration.
