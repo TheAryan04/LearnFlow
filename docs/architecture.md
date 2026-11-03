@@ -7,41 +7,25 @@
 - MongoDB using the existing native `mongodb` driver.
 - Clerk for user authentication.
 - Socket.IO for real-time events.
+- Local filesystem storage for uploaded course materials and submissions.
 
-Mongoose is intentionally not introduced. Existing collections, document shapes, IDs, and API response envelopes remain the source of truth.
+No LLM provider or AI API is required by the application.
 
 ## Backend structure
 
 ```text
 backend/
 ├── server.js
+├── uploads/              # Runtime file data; keep out of version control
 ├── src/
 │   ├── app.js
 │   ├── config/
 │   │   └── database.js
 │   ├── controllers/
-│   │   ├── courses.controller.js
-│   │   ├── enrolments.controller.js
-│   │   ├── coursework.controller.js
-│   │   ├── classroom.controller.js
-│   │   └── community.controller.js
 │   ├── repositories/
-│   │   └── collection.repository.js
 │   ├── services/
-│   │   ├── course.service.js
-│   │   ├── enrolment.service.js
-│   │   ├── coursework.service.js
-│   │   ├── classroom.service.js
-│   │   └── community.service.js
 │   ├── routes/
-│   │   ├── courses.js
-│   │   ├── enrolments.js
-│   │   ├── coursework.js
-│   │   ├── classroom.js
-│   │   └── community.js
 │   ├── utils/
-│   │   ├── core.js
-│   │   └── errors.js
 │   ├── auth.js
 │   ├── clerk.js
 │   ├── realtime.js
@@ -59,9 +43,15 @@ backend/
 - **Repositories:** centralize MongoDB collection operations using the native driver.
 - **Config:** initialize infrastructure such as MongoDB.
 - **Middleware/auth:** authenticate users and enforce roles.
-- **Realtime/storage:** preserve Socket.IO and file-storage integrations.
+- **Realtime/storage:** provide Socket.IO and local filesystem-backed file persistence.
 
-All five domain route modules now delegate request handling to dedicated controller modules. Course, enrolment, coursework, classroom, and community business operations live in corresponding service modules.
+All five domain route modules delegate request handling to dedicated controller modules. Course, enrolment, coursework, classroom, and community business operations live in corresponding service modules.
+
+## File storage
+
+Uploaded files are stored under `backend/uploads` by default. Set `FILE_STORAGE_DIR` to an absolute or relative directory to choose another location. MongoDB stores file metadata and the relative storage path; downloads continue through the authenticated `/api/files/:id` endpoint.
+
+The uploads directory contains runtime user data. Back it up separately and do not commit it to Git. Local filesystem storage is suitable for a single-instance MVP; use a shared persistent volume or an S3-compatible adapter before running multiple API instances or ephemeral hosting.
 
 ## Compatibility decisions
 
@@ -69,7 +59,7 @@ All five domain route modules now delegate request handling to dedicated control
 2. Keep API URLs, status codes, and response envelopes unchanged.
 3. Keep Clerk token verification and demo-login behavior unchanged.
 4. Keep Socket.IO path, event names, and room naming unchanged.
-5. Keep the existing upload/storage adapter unchanged.
+5. Keep the file metadata API and authenticated download route unchanged while replacing the external storage provider with local disk.
 6. Keep `src/core.js` as a compatibility facade for existing imports.
 7. Keep backend integration tests in `backend/tests/` until their runner and CI paths are updated together.
 
