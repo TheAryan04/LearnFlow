@@ -35,6 +35,18 @@ export async function listAttendance(user, { courseId, studentId }) {
 export async function recordAttendance(user, { courseId, date, records = [] }) {
   if (!courseId || !date) throw new ApiError(400, 'courseId and date are required');
   const course = await ownedCourse(courseId, user);
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`))) {
+    throw new ApiError(400, 'date must be a valid YYYY-MM-DD date');
+  }
+  if (!Array.isArray(records)) throw new ApiError(400, 'records must be an array');
+  const seen = new Set();
+  for (const record of records) {
+    if (!record?.studentId || seen.has(record.studentId)) throw new ApiError(400, 'Each attendance record must contain a unique studentId');
+    seen.add(record.studentId);
+    if (!['Present', 'Late', 'Absent'].includes(record.status)) throw new ApiError(400, 'Attendance status must be Present, Late, or Absent');
+    const enrolled = await db.collection('enrolments').findOne({ userId: record.studentId, courseId });
+    if (!enrolled) throw new ApiError(400, 'Attendance can only be recorded for enrolled students');
+  }
   const existing = await findOne('attendance', { courseId, date });
   const entry = { id: existing?.id || uid('att'), courseId, courseTitle: course.title, date, records };
   if (existing) await update('attendance', entry.id, entry);
