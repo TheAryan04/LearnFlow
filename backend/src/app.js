@@ -8,9 +8,12 @@ import classroom from './routes/classroom.js';
 import community from './routes/community.js';
 
 const app = express();
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+  : '*';
 
 app.use(cors({
-  origin: (process.env.CORS_ORIGINS || '*').split(','),
+  origin: allowedOrigins,
   allowedHeaders: ['Authorization', 'Content-Type', 'Accept'],
 }));
 app.use(express.json({ limit: '2mb' }));
