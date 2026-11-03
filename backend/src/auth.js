@@ -67,7 +67,7 @@ async function clerkProfile(claims, body) {
     const p = await clerk.users.getUser(claims.sub);
     return {
       email: (p.primaryEmailAddress?.emailAddress || p.emailAddresses?.[0]?.emailAddress || '').toLowerCase(),
-      emailVerified: true,
+      emailVerified: p.primaryEmailAddress?.verification?.status === 'verified',
       name: [p.firstName, p.lastName].filter(Boolean).join(' ') || p.username,
       avatar: p.imageUrl,
     };
