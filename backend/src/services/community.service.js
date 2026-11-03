@@ -1,4 +1,4 @@
-import { ApiError, db, find, findOne, insert, update, uid, nowIso, publicUser } from '../core.js';
+import { ApiError, db, find, findOne, insert, update, uid, nowIso, today, publicUser } from '../core.js';
 import { canAccessCourse } from '../realtime.js';
 import { scopedCourseIds } from '../scope.js';
 
