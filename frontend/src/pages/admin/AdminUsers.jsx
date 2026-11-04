@@ -75,7 +75,7 @@ export default function AdminUsers() {
       toast.success(`User role updated to ${newRole}`);
       loadUsers();
     } catch (err) {
-      toast.info('Role updated');
+      toast.error(err.message || 'Unable to update user role');
     }
   };
 
@@ -86,7 +86,7 @@ export default function AdminUsers() {
       toast.success(`User ${nextStatus.toLowerCase()} successfully`);
       loadUsers();
     } catch (err) {
-      toast.info('Status updated');
+      toast.error(err.message || 'Unable to update user status');
     }
   };
 
