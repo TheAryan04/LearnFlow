@@ -16,7 +16,42 @@ export default function StudentResults() {
   }, [dispatch, user]);
 
   const handleDownloadTranscript = () => {
-    toast.success('Official academic transcript downloaded as PDF.');
+    try {
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      let y = 20;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(20);
+      pdf.text('LearnFlow Academic Grade Card', 15, y);
+      y += 10;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.text(`Student: ${user?.name || 'Student'}`, 15, y); y += 6;
+      pdf.text(`Email: ${user?.email || '—'}`, 15, y); y += 6;
+      pdf.text(`Generated: ${new Date().toLocaleDateString()}`, 15, y); y += 8;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`Cumulative GPA: ${Number(cumulativeGpa || 0).toFixed(2)} / 4.00`, 15, y); y += 10;
+      pdf.line(15, y, pageWidth - 15, y); y += 8;
+      results.forEach((result, index) => {
+        const lines = pdf.splitTextToSize(
+          `${index + 1}. ${result.courseTitle || 'Course'} | Marks: ${result.totalMarks}/100 | Grade: ${result.grade} | GPA: ${Number(result.gpa || 0).toFixed(1)}\nRemarks: ${result.remarks || '—'} | Published: ${result.publishedDate || '—'}`,
+          pageWidth - 30
+        );
+        const height = lines.length * 5 + 4;
+        if (y + height > 280) { pdf.addPage(); y = 20; }
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10);
+        pdf.text(lines, 15, y); y += height;
+        pdf.line(15, y - 2, pageWidth - 15, y - 2);
+      });
+      if (!results.length) {
+        pdf.setFont('helvetica', 'italic');
+        pdf.text('No results have been published yet.', 15, y);
+      }
+      pdf.save(`learnflow-grade-card-${user?.id || 'student'}.pdf`);
+      toast.success('Grade card PDF downloaded.');
+    } catch (error) {
+      toast.error('Unable to generate the grade card PDF.');
+    }
   };
 
   const getGradeBadge = (grade) => {
