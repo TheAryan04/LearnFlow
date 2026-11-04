@@ -15,7 +15,7 @@ export async function loadAuthorizedFile(user, fileId) {
 
 export async function listMaterials(user, courseId) {
   const items = await find('materials', courseId ? { courseId } : {});
-  return inScope(items, await scopedCourseIds(user));
+  return inScope(items, await scopedCourseIds(user)).sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
 }
 
 export async function createMaterial(user, body, file) {
@@ -27,7 +27,7 @@ export async function createMaterial(user, body, file) {
     id: uid('mat'), courseId, title: title.trim(),
     fileType: fileType || (upload?.type ? upload.type.split('/').pop().toUpperCase() : 'PDF'),
     size: upload ? `${(upload.size / 1048576).toFixed(1)} MB` : '3.2 MB',
-    uploadedDate: today(), url: upload ? upload.url : '#',
+    uploadedDate: today(), order: Number.isInteger(Number(body.order)) && Number(body.order) >= 0 ? Number(body.order) : 0, url: upload ? upload.url : '#',
   };
   await insert('materials', material);
   return material;
