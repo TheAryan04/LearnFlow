@@ -41,7 +41,15 @@ export const createCourse = createAsyncThunk(
   'courses/createCourse',
   async (courseData, { rejectWithValue }) => {
     try {
-      const res = await api.post('/courses', courseData);
+      const { thumbnailFile, ...course } = courseData;
+      if (thumbnailFile) {
+        const form = new FormData();
+        form.append('course', JSON.stringify(course));
+        form.append('thumbnail', thumbnailFile);
+        const res = await api.post('/courses', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+        return res.data;
+      }
+      const res = await api.post('/courses', course);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.message);
@@ -53,7 +61,15 @@ export const updateCourse = createAsyncThunk(
   'courses/updateCourse',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await api.put(`/courses/${id}`, data);
+      const { thumbnailFile, ...course } = data;
+      if (thumbnailFile) {
+        const form = new FormData();
+        form.append('course', JSON.stringify(course));
+        form.append('thumbnail', thumbnailFile);
+        const res = await api.put(`/courses/${id}`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+        return res.data;
+      }
+      const res = await api.put(`/courses/${id}`, course);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.message);
