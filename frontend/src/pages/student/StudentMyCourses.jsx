@@ -3,7 +3,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import humanizeDuration from 'humanize-duration';
-import { BookOpen, Search, Play, CheckCircle2, Clock, Sparkles, Grid3x3, List, ArrowRight } from 'lucide-react';
+import { BookOpen, Search, Play, CheckCircle2, Clock, Sparkles, Grid3x3, List, ArrowRight, LogOut } from 'lucide-react';
+import api from '../../utils/api';
+import { useToast } from '../../components/common/Toast';
 import { fetchEnrolments } from '../../redux/slices/enrolmentsSlice';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import SectionHeader from '../../components/ui/SectionHeader';
@@ -29,6 +31,7 @@ const item = {
 
 export default function StudentMyCourses() {
   const dispatch = useDispatch();
+  const toast = useToast();
   const { user } = useSelector((state) => state.auth);
   const { enrolments, loading } = useSelector((state) => state.enrolments);
   const [filter, setFilter] = useState('all');
@@ -50,6 +53,17 @@ export default function StudentMyCourses() {
     if (filter === 'completed') return e.progress === 100;
     return true;
   });
+
+  const handleUnenrol = async (enrolment) => {
+    if (!window.confirm(`Unenrol from "${enrolment.course?.title || 'this course'}"? Your course progress will be retained only if you enrol again and the platform supports restoration.`)) return;
+    try {
+      await api.delete(`/enrolments/${enrolment.id}`);
+      await dispatch(fetchEnrolments(user?.id));
+      toast.success('You have been unenrolled from the course.');
+    } catch (error) {
+      toast.error(error.message || 'Unable to unenrol from this course.');
+    }
+  };
 
   const tabs = [
     { key: 'all', label: 'All Courses' },
@@ -219,6 +233,15 @@ export default function StudentMyCourses() {
                             {enrol.progress === 100 ? 'Review Course' : 'Continue Learning'}
                             <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                           </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleUnenrol(enrol)}
+                            className="mt-2 w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-rose-700 border border-rose-200 hover:bg-rose-50 transition-colors"
+                          >
+                            <LogOut className="w-3.5 h-3.5" />
+                            Unenrol from course
+                          </button>
+
                         </div>
                       </GlassCard>
                     </TiltCard>
