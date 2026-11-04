@@ -4,6 +4,7 @@ import app from './src/app.js';
 import { connectDb, client } from './src/config/database.js';
 import { initRealtime, closeRealtime } from './src/realtime.js';
 import { seedAndIndex } from './src/seed.js';
+import { startDeadlineNotifications } from './src/deadline-notifications.js';
 
 const port = Number(process.env.PORT || 8000);
 const server = http.createServer(app);
@@ -12,6 +13,7 @@ initRealtime(server);
 
 await connectDb();
 await seedAndIndex();
+const stopDeadlineNotifications = startDeadlineNotifications();
 
 server.listen(port, '0.0.0.0', () => {
   console.log(`LearnFlow API listening on ${port}`);
@@ -31,6 +33,7 @@ async function shutdown(signal) {
   forceExit.unref();
 
   try {
+    stopDeadlineNotifications();
     await closeRealtime();
     await client.close();
     clearTimeout(forceExit);
