@@ -2,6 +2,7 @@ import { listPublishedCourses, listManagedCourses, getCourse, createCourse, upda
 import { ok, created, uid } from '../utils/core.js';
 import { emit, notify } from '../realtime.js';
 import { db } from '../core.js';
+import { ApiError } from '../utils/errors.js';
 import { saveUpload } from '../storage.js';
 
 export async function listCourses(req, res) {
@@ -16,12 +17,19 @@ export async function showCourse(req, res) {
   ok(res, await getCourse(req.params.id));
 }
 export async function createCourseHandler(req, res) {
+  if (req.file && !req.file.mimetype?.startsWith('image/')) {
+    throw new ApiError(400, 'Course thumbnail must be an image');
+  }
   const course = await createCourse(req.body || {}, req.user);
   if (req.file) {
-    if (!req.file.mimetype?.startsWith('image/')) throw new Error('Course thumbnail must be an image');
-    const uploaded = await saveUpload(req.file, req.user.id, course.id);
-    course.thumbnail = uploaded.url;
-    await updateCourse(course.id, req.user, { thumbnail: uploaded.url });
+    try {
+      const uploaded = await saveUpload(req.file, req.user.id, course.id);
+      course.thumbnail = uploaded.url;
+      await updateCourse(course.id, req.user, { thumbnail: uploaded.url });
+    } catch (error) {
+      await deleteCourse(course.id, req.user);
+      throw error;
+    }
   }
   if (course.status === 'published') {
     emit('course_published', course);
@@ -35,6 +43,7 @@ export async function createCourseHandler(req, res) {
   }
   created(res, course);
 }
+
 export async function updateCourseHandler(req, res) {
   const course = await updateCourse(req.params.id, req.user, req.body);
   emit('course_updated', course);
