@@ -55,7 +55,7 @@ export default function StudentMyCourses() {
   });
 
   const handleUnenrol = async (enrolment) => {
-    if (!window.confirm(`Unenrol from "${enrolment.course?.title || 'this course'}"? Your course progress will be retained only if you enrol again and the platform supports restoration.`)) return;
+    if (!window.confirm(`Unenrol from "${enrolment.course?.title || 'this course'}"? This removes your enrolment and its saved progress.`)) return;
     try {
       await api.delete(`/enrolments/${enrolment.id}`);
       await dispatch(fetchEnrolments(user?.id));
