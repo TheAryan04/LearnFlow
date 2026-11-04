@@ -107,3 +107,15 @@ yarn start
 - Add domain-specific repositories if query logic grows beyond the shared collection repository.
 - Audit frontend feature boundaries and consolidate duplicate API/service helpers.
 - Move backend tests only after updating their execution and CI configuration.
+
+
+## Admin, reports, and notifications
+
+- Admin user and course operations remain protected by the existing admin role middleware.
+- Admin reports are read from MongoDB collections through `GET /api/admin/reports/:type`; supported types are users, courses, enrolments, attendance, results, assignments, and submissions.
+- Attendance reports flatten the stored session records and include student identity; enrolment, result, and submission reports include related student/course/assignment labels.
+- The student grade card is generated in the browser as a PDF using the installed jsPDF dependency.
+- Assignment deadline reminders run hourly and notify enrolled students when an assignment is due within the next 24 hours. A reminder is recorded once per assignment/student.
+- Course publication and updates, assignment announcements, grading, and result publication create in-app notifications. Per-user notifications are also emailed when SMTP is configured.
+
+Optional email delivery uses Nodemailer. Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM` in the backend environment. Email is skipped when SMTP settings are absent; email delivery errors are logged and do not fail the in-app notification request. See `backend/.env.example`.
