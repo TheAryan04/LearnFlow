@@ -11,7 +11,7 @@ export async function listUsersHandler(req, res) {
   ok(res, users, { count: users.length });
 }
 export async function changeUserRoleHandler(req, res) {
-  ok(res, await changeUserRole(req.params.id, req.body?.role));
+  ok(res, await changeUserRole(req.user, req.params.id, req.body?.role));
 }
 export async function changeUserStatusHandler(req, res) {
   ok(res, await changeUserStatus(req.user, req.params.id, req.body?.status));
