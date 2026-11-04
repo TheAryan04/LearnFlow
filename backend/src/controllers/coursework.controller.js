@@ -4,6 +4,7 @@ import {
 } from '../services/coursework.service.js';
 import { ok, created, uid } from '../utils/core.js';
 import { emit, emitToUser, notify } from '../realtime.js';
+import { db } from '../core.js';
 
 export async function getFileHandler(req, res) {
   const { record, content } = await loadAuthorizedFile(req.user, req.params.id);
@@ -30,11 +31,13 @@ export async function listAssignmentsHandler(req, res) {
 export async function createAssignmentHandler(req, res) {
   const { assignment, course } = await createAssignment(req.user, req.body || {});
   emit('new_assignment', assignment);
-  await notify({
-    id: uid('notif'), title: 'New Assignment Posted',
+  const enrolments = await db.collection('enrolments').find({ courseId: course.id }).project({ userId: 1 }).toArray();
+  const recipients = [...new Set(enrolments.map((item) => item.userId).filter(Boolean))];
+  await Promise.all(recipients.map((userId) => notify({
+    id: uid('notif'), userId, title: 'New Assignment Posted',
     message: `${course.title}: "${assignment.title}" is now open for submissions.`,
     date: 'Just now', read: false, type: 'info',
-  });
+  })));
   created(res, assignment);
 }
 export async function listSubmissionsHandler(req, res) {
