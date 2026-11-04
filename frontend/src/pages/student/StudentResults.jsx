@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { jsPDF } from 'jspdf';
 import { useSelector, useDispatch } from 'react-redux';
 import { Award, Download, CheckCircle2, Star, Sparkles, TrendingUp } from 'lucide-react';
 import { fetchResults } from '../../redux/slices/resultsSlice';
