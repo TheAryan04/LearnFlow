@@ -45,7 +45,13 @@ export async function createCourseHandler(req, res) {
 }
 
 export async function updateCourseHandler(req, res) {
-  const course = await updateCourse(req.params.id, req.user, req.body);
+  const body = req.body?.course ? JSON.parse(req.body.course) : (req.body || {});
+  let course = await updateCourse(req.params.id, req.user, body);
+  if (req.file) {
+    if (!req.file.mimetype?.startsWith('image/')) throw new ApiError(400, 'Course thumbnail must be an image');
+    const uploaded = await saveUpload(req.file, req.user.id, course.id);
+    course = await updateCourse(course.id, req.user, { thumbnail: uploaded.url });
+  }
   emit('course_updated', course);
   if (course.status === 'published') {
     const enrolments = await db.collection('enrolments').find({ courseId: course.id }).project({ userId: 1 }).toArray();
@@ -58,6 +64,7 @@ export async function updateCourseHandler(req, res) {
   }
   ok(res, course);
 }
+
 export async function deleteCourseHandler(req, res) {
   await deleteCourse(req.params.id, req.user);
   emit('course_deleted', req.params.id);
