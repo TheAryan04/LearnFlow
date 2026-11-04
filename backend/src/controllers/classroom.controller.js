@@ -10,11 +10,11 @@ export async function listAttendanceHandler(req, res) {
 export async function recordAttendanceHandler(req, res) {
   const entry = await recordAttendance(req.user, req.body || {});
   emit('attendance_updated', entry, `course_${entry.courseId}`);
-  await notify({
-    id: uid('notif'), title: 'Attendance Logged',
-    message: `Attendance for ${entry.courseTitle} on ${entry.date} has been recorded.`,
+  await Promise.all((entry.records || []).map((record) => notify({
+    id: uid('notif'), userId: record.studentId, title: 'Attendance Updated',
+    message: `Your attendance for ${entry.courseTitle} on ${entry.date} was marked ${record.status}.`,
     date: 'Just now', read: false, type: 'info',
-  });
+  })));
   res.status(201).json({ success: true, message: 'Attendance recorded successfully', data: entry });
 }
 
