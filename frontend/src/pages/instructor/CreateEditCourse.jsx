@@ -31,6 +31,7 @@ export default function CreateEditCourse() {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Development');
   const [price, setPrice] = useState(3999);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
   const [thumbnail, setThumbnail] = useState(
     'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'
   );
@@ -164,6 +165,7 @@ export default function CreateEditCourse() {
       category,
       price: Number(price),
       thumbnail,
+      thumbnailFile,
       previewYoutubeUrl,
       description,
       status: isPublished ? 'published' : 'draft',
@@ -182,8 +184,7 @@ export default function CreateEditCourse() {
       }
       navigate('/instructor/courses');
     } catch (err) {
-      toast.info('Course details saved!');
-      navigate('/instructor/courses');
+      toast.error(err || 'Unable to save course details.');
     }
   };
 
@@ -281,9 +282,18 @@ export default function CreateEditCourse() {
             <input
               type="url"
               value={thumbnail}
-              onChange={(e) => setThumbnail(e.target.value)}
+              onChange={(e) => { setThumbnail(e.target.value); setThumbnailFile(null); }}
               className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-accent focus:outline-none text-slate-800 dark:text-slate-100"
             />
+            <label className="mt-3 block text-xs text-slate-500">
+              Or upload an image to Cloudinary (max 5 MB)
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                className="mt-2 block w-full text-xs"
+              />
+            </label>
           </div>
 
           <div>
