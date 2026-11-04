@@ -14,8 +14,14 @@ export async function listUsers(user, requestedRole) {
 export async function changeUserRole(userId, requestedRole) {
   const role = String(requestedRole || '').toLowerCase();
   if (!['student', 'instructor', 'admin'].includes(role)) throw new ApiError(400, 'Invalid user role');
-  if (!(await findOne('users', { id: userId }))) throw new ApiError(404, 'User not found');
-  return publicUser(await update('users', userId, { role: role[0].toUpperCase() + role.slice(1) }));
+  const target = await findOne('users', { id: userId });
+  if (!target) throw new ApiError(404, 'User not found');
+  const nextRole = role[0].toUpperCase() + role.slice(1);
+  if (target.role === 'Admin' && nextRole !== 'Admin') {
+    const admins = await db.collection('users').countDocuments({ role: 'Admin', status: { $ne: 'Deactivated' } });
+    if (admins <= 1) throw new ApiError(409, 'The last active administrator cannot be demoted');
+  }
+  return publicUser(await update('users', userId, { role: nextRole }));
 }
 
 export async function changeUserStatus(actor, userId, requestedStatus) {
@@ -24,6 +30,10 @@ export async function changeUserStatus(actor, userId, requestedStatus) {
   if (user.id === actor.id) throw new ApiError(400, 'You cannot deactivate your own account');
   const status = requestedStatus || (user.status === 'Active' ? 'Deactivated' : 'Active');
   if (!['Active', 'Deactivated'].includes(status)) throw new ApiError(400, 'Status must be Active or Deactivated');
+  if (user.role === 'Admin' && status === 'Deactivated') {
+    const admins = await db.collection('users').countDocuments({ role: 'Admin', status: { $ne: 'Deactivated' } });
+    if (admins <= 1) throw new ApiError(409, 'The last active administrator cannot be deactivated');
+  }
   return publicUser(await update('users', userId, { status }));
 }
 
@@ -62,12 +72,19 @@ export async function createDiscussion(user, { courseId, message }) {
 }
 
 export async function adminStats() {
+  const [totalUsers, totalCourses, totalEnrolments, publishedCourses, totalAttendanceSessions, totalResults] = await Promise.all([
+    db.collection('users').countDocuments(),
+    db.collection('courses').countDocuments(),
+    db.collection('enrolments').countDocuments(),
+    db.collection('courses').countDocuments({ status: 'published' }),
+    db.collection('attendance').countDocuments(),
+    db.collection('results').countDocuments(),
+  ]);
   return {
-    totalUsers: await db.collection('users').countDocuments(),
-    totalCourses: await db.collection('courses').countDocuments(),
-    totalEnrolments: await db.collection('enrolments').countDocuments(),
+    totalUsers, totalCourses, totalEnrolments, publishedCourses, totalAttendanceSessions, totalResults,
     activeThisMonth: await db.collection('users').countDocuments({ joinedDate: { $gte: today().slice(0, 7) + '-01' } }),
-    // Revenue is not modelled yet; do not present fabricated financial figures.
+    revenueChartData: [],
+    revenueAvailable: false,
   };
 }
 
