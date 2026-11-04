@@ -2,6 +2,7 @@ import { listPublishedCourses, listManagedCourses, getCourse, createCourse, upda
 import { ok, created, uid } from '../utils/core.js';
 import { emit, notify } from '../realtime.js';
 import { db } from '../core.js';
+import { saveUpload } from '../storage.js';
 
 export async function listCourses(req, res) {
   const courses = await listPublishedCourses(req.query);
@@ -16,6 +17,12 @@ export async function showCourse(req, res) {
 }
 export async function createCourseHandler(req, res) {
   const course = await createCourse(req.body || {}, req.user);
+  if (req.file) {
+    if (!req.file.mimetype?.startsWith('image/')) throw new Error('Course thumbnail must be an image');
+    const uploaded = await saveUpload(req.file, req.user.id, course.id);
+    course.thumbnail = uploaded.url;
+    await updateCourse(course.id, req.user, { thumbnail: uploaded.url });
+  }
   if (course.status === 'published') {
     emit('course_published', course);
     await notify({
