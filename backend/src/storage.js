@@ -1,50 +1,124 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
+import { mkdir, readFile as fsReadFile, writeFile, unlink } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { v2 as cloudinary } from 'cloudinary';
 import { db, uid, nowIso } from './core.js';
 
-const BASE = (process.env.INTEGRATION_PROXY_URL || '').trim() || 'https://integrations.emergentagent.com';
-const STORAGE_URL = `${BASE.replace(/\/$/, '')}/objstore/api/v1/storage`;
-const APP_NAME = 'learnflow';
-let storageKey = null;
+// Cloudinary stores new uploads. Legacy local files remain readable during migration.
+const DEFAULT_STORAGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'uploads');
+const STORAGE_DIR = path.resolve(process.env.FILE_STORAGE_DIR || DEFAULT_STORAGE_DIR);
+let cloudinaryConfigured = false;
 
-export async function initStorage(force = false) {
-  if (storageKey && !force) return storageKey;
-  const res = await fetch(`${STORAGE_URL}/init`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ emergent_key: process.env.EMERGENT_LLM_KEY }),
-  });
-  if (!res.ok) throw new Error(`Storage init failed: ${res.status}`);
-  storageKey = (await res.json()).storage_key;
-  return storageKey;
-}
+function configureCloudinary() {
+  if (cloudinaryConfigured) return;
 
-async function storageRequest(path, options, retry = true) {
-  const res = await fetch(`${STORAGE_URL}/objects/${path}`, { ...options, headers: { ...options.headers, 'X-Storage-Key': await initStorage() } });
-  if (res.status === 404 && retry) {
-    await initStorage(true);
-    return storageRequest(path, options, false);
+  // The SDK reads CLOUDINARY_URL automatically. Individual variables are also supported.
+  if (process.env.CLOUDINARY_URL) {
+    cloudinary.config({ secure: true });
+  } else {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+      secure: true,
+    });
   }
-  if (!res.ok) throw new Error(`Storage request failed: ${res.status}`);
-  return res;
+
+  const config = cloudinary.config();
+  if (!config.cloud_name || !config.api_key || !config.api_secret) {
+    const error = new Error(
+      'Cloudinary is not configured. Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET.'
+    );
+    error.status = 503;
+    throw error;
+  }
+  cloudinaryConfigured = true;
 }
 
-// Uploads a multer memory file; returns public metadata pointing at /api/files/:id.
+function uploadBuffer(buffer, options) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
+    });
+    stream.end(buffer);
+  });
+}
+
+function resolveLegacyStoragePath(storagePath) {
+  const absolutePath = path.resolve(STORAGE_DIR, storagePath);
+  if (absolutePath !== STORAGE_DIR && !absolutePath.startsWith(`${STORAGE_DIR}${path.sep}`)) {
+    const error = new Error('Invalid storage path');
+    error.status = 400;
+    throw error;
+  }
+  return absolutePath;
+}
+
+// Uploads a multer memory file to Cloudinary; metadata remains in MongoDB.
 export async function saveUpload(file, ownerId, courseId) {
   if (!file) return null;
-  const ext = (file.originalname.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
-  const path = `${APP_NAME}/uploads/${ownerId}/${crypto.randomUUID()}.${ext}`;
+  configureCloudinary();
+
+  const publicId = crypto.randomUUID();
+  const asset = await uploadBuffer(file.buffer, {
+    folder: `learnflow/uploads/${String(ownerId)}`,
+    public_id: publicId,
+    resource_type: 'auto',
+    type: 'upload',
+    overwrite: false,
+    use_filename: false,
+    unique_filename: false,
+  });
+
   const contentType = file.mimetype || 'application/octet-stream';
-  const res = await storageRequest(path, { method: 'PUT', headers: { 'Content-Type': contentType }, body: file.buffer });
-  const stored = await res.json();
   const record = {
-    id: uid('file'), storagePath: stored.path || path, originalFilename: file.originalname, contentType,
-    size: file.size, ownerId, courseId, isDeleted: false, createdAt: nowIso(),
+    id: uid('file'),
+    storageProvider: 'cloudinary',
+    cloudinaryPublicId: asset.public_id,
+    cloudinaryResourceType: asset.resource_type,
+    cloudinaryUrl: asset.secure_url,
+    originalFilename: file.originalname,
+    contentType,
+    size: file.size,
+    ownerId,
+    courseId,
+    isDeleted: false,
+    createdAt: nowIso(),
   };
-  await db.collection('files').insertOne(record);
-  return { id: record.id, name: file.originalname, url: `/api/files/${record.id}`, size: file.size, type: contentType };
+
+  try {
+    await db.collection('files').insertOne(record);
+  } catch (error) {
+    // Roll back the remote asset if MongoDB cannot persist its metadata.
+    await cloudinary.uploader.destroy(asset.public_id, {
+      resource_type: asset.resource_type,
+      type: 'upload',
+    }).catch(() => {});
+    throw error;
+  }
+
+  return {
+    id: record.id,
+    name: file.originalname,
+    url: `/api/files/${record.id}`,
+    size: file.size,
+    type: contentType,
+  };
 }
 
 export async function readFile(record) {
-  const res = await storageRequest(record.storagePath, { method: 'GET', headers: {} });
-  return Buffer.from(await res.arrayBuffer());
+  if (record.storageProvider === 'cloudinary' && record.cloudinaryUrl) {
+    const response = await fetch(record.cloudinaryUrl);
+    if (!response.ok) {
+      const error = new Error(`Cloudinary file retrieval failed: ${response.status}`);
+      error.status = response.status === 404 ? 404 : 502;
+      throw error;
+    }
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  // Backward compatibility for files uploaded before the Cloudinary migration.
+  return fsReadFile(resolveLegacyStoragePath(record.storagePath));
 }

@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { db, insert, nowIso } from './core.js';
 import { resolveToken } from './auth.js';
+import { sendNotificationEmail } from './email.js';
 
 let io = null;
 
@@ -21,10 +22,18 @@ export const emitToUser = (userId, event, payload) => emit(event, payload, `user
 export async function notify(notif) {
   await insert('notifications', notif);
   emit('notification', notif, notif.userId ? `user_${notif.userId}` : undefined);
+  if (notif.userId) {
+    void sendNotificationEmail(notif.userId, notif).catch((error) => {
+      console.error('Notification email delivery failed:', error.message);
+    });
+  }
 }
 
 export function initRealtime(server) {
-  io = new Server(server, { path: '/api/socket.io', cors: { origin: '*' } });
+  const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+    : '*';
+  io = new Server(server, { path: '/api/socket.io', cors: { origin: allowedOrigins } });
 
   io.use(async (socket, next) => {
     const { user } = await resolveToken(socket.handshake.auth?.token);
@@ -52,5 +61,15 @@ export function initRealtime(server) {
         message: message.slice(0, 4000), timestamp: nowIso(),
       });
     });
+  });
+}
+
+
+export function closeRealtime() {
+  if (!io) return Promise.resolve();
+  const current = io;
+  io = null;
+  return new Promise((resolve, reject) => {
+    current.close((error) => error ? reject(error) : resolve());
   });
 }

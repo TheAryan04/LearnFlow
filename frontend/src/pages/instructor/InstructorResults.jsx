@@ -37,13 +37,10 @@ export default function InstructorResults() {
   // Auto compute grade and GPA
   const computeGrade = (marks) => {
     const m = Number(marks);
-    if (m >= 90) return { grade: 'A+', gpa: 4.0 };
-    if (m >= 80) return { grade: 'A', gpa: 3.8 };
-    if (m >= 75) return { grade: 'B+', gpa: 3.4 };
-    if (m >= 70) return { grade: 'B', gpa: 3.0 };
-    if (m >= 60) return { grade: 'C+', gpa: 2.5 };
-    if (m >= 50) return { grade: 'C', gpa: 2.0 };
-    if (m >= 40) return { grade: 'D', gpa: 1.5 };
+    if (m >= 90) return { grade: 'A', gpa: 4.0 };
+    if (m >= 75) return { grade: 'B', gpa: 3.0 };
+    if (m >= 60) return { grade: 'C', gpa: 2.0 };
+    if (m >= 50) return { grade: 'D', gpa: 1.0 };
     return { grade: 'F', gpa: 0.0 };
   };
 
@@ -65,7 +62,7 @@ export default function InstructorResults() {
 
       toast.success(`Published Grade ${computedGrade} for student!`);
     } catch (err) {
-      toast.info('Result published!');
+      toast.error(err || 'Unable to publish result. Please try again.');
     } finally {
       setSubmitting(false);
     }

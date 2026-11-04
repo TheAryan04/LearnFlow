@@ -17,4 +17,17 @@ export async function seedAndIndex() {
   await db.collection('users').createIndex({ email: 1 });
   await db.collection('users').createIndex({ clerkId: 1 }, { unique: true, partialFilterExpression: { clerkId: { $type: 'string' } } });
   await Promise.all(COLLECTIONS.map((c) => db.collection(c).createIndex({ id: 1 })));
+
+  // Small, workload-driven indexes for the MVP's common ownership and lookup queries.
+  await Promise.all([
+    db.collection('courses').createIndex({ status: 1, _order: -1 }),
+    db.collection('courses').createIndex({ instructorId: 1 }),
+    db.collection('enrolments').createIndex({ userId: 1, courseId: 1 }),
+    db.collection('assignments').createIndex({ courseId: 1 }),
+    db.collection('submissions').createIndex({ assignmentId: 1, studentId: 1 }),
+    db.collection('attendance').createIndex({ courseId: 1, date: -1 }),
+    db.collection('materials').createIndex({ courseId: 1 }),
+    db.collection('discussions').createIndex({ courseId: 1, timestamp: 1 }),
+    db.collection('notifications').createIndex({ userId: 1, read: 1 }),
+  ]);
 }
