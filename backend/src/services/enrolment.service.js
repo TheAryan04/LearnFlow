@@ -60,3 +60,15 @@ export async function updateStudentProgress(user, enrolmentId, body) {
     lastAccessedLessonId: lessonId || enrolment.lastAccessedLessonId,
   });
 }
+
+export async function unenrolStudent(user, enrolmentId) {
+  const enrolment = await findOne('enrolments', { id: enrolmentId });
+  if (!enrolment) throw new ApiError(404, 'Enrolment not found');
+  if (enrolment.userId !== user.id) throw new ApiError(403, "Cannot unenrol another student");
+  await db.collection('enrolments').deleteOne({ id: enrolmentId, userId: user.id });
+  await db.collection('courses').updateOne(
+    { id: enrolment.courseId, enrolledCount: { $gt: 0 } },
+    { $inc: { enrolledCount: -1 } }
+  );
+  return { id: enrolmentId, courseId: enrolment.courseId };
+}
