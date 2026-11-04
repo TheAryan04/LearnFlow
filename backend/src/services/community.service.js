@@ -11,19 +11,19 @@ export async function listUsers(user, requestedRole) {
   return users;
 }
 
-export async function changeUserRole(userId, requestedRole) {
+export async function changeUserRole(actor, userId, requestedRole) {
   const role = String(requestedRole || '').toLowerCase();
   if (!['student', 'instructor', 'admin'].includes(role)) throw new ApiError(400, 'Invalid user role');
   const target = await findOne('users', { id: userId });
   if (!target) throw new ApiError(404, 'User not found');
   const nextRole = role[0].toUpperCase() + role.slice(1);
+  if (actor?.id === userId && nextRole !== 'Admin') throw new ApiError(400, 'You cannot remove your own administrator role');
   if (target.role === 'Admin' && nextRole !== 'Admin') {
     const admins = await db.collection('users').countDocuments({ role: 'Admin', status: { $ne: 'Deactivated' } });
     if (admins <= 1) throw new ApiError(409, 'The last active administrator cannot be demoted');
   }
   return publicUser(await update('users', userId, { role: nextRole }));
 }
-
 export async function changeUserStatus(actor, userId, requestedStatus) {
   const user = await findOne('users', { id: userId });
   if (!user) throw new ApiError(404, 'User not found');
