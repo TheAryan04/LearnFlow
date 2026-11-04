@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { db, insert, nowIso } from './core.js';
 import { resolveToken } from './auth.js';
+import { sendNotificationEmail } from './email.js';
 
 let io = null;
 
@@ -21,6 +22,11 @@ export const emitToUser = (userId, event, payload) => emit(event, payload, `user
 export async function notify(notif) {
   await insert('notifications', notif);
   emit('notification', notif, notif.userId ? `user_${notif.userId}` : undefined);
+  if (notif.userId) {
+    void sendNotificationEmail(notif.userId, notif).catch((error) => {
+      console.error('Notification email delivery failed:', error.message);
+    });
+  }
 }
 
 export function initRealtime(server) {
