@@ -6,6 +6,7 @@ import enrolments from './routes/enrolments.js';
 import coursework from './routes/coursework.js';
 import classroom from './routes/classroom.js';
 import community from './routes/community.js';
+import admin from './routes/admin.js';
 
 const app = express();
 const allowedOrigins = process.env.CORS_ORIGINS
@@ -27,7 +28,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '2mb' }));
 
-app.use('/api', authRouter, courses, enrolments, coursework, classroom, community);
+app.use('/api', authRouter, courses, enrolments, coursework, classroom, community, admin);
 
 app.use('/api', (_req, res) =>
   res.status(404).json({ success: false, message: 'Not found' })
