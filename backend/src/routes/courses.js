@@ -13,7 +13,7 @@ router.get('/courses', listCourses);
 router.get('/courses/all', requireRole('instructor', 'admin'), listAllCourses);
 router.get('/courses/:id', showCourse);
 router.post('/courses', requireRole('instructor', 'admin'), upload.single('thumbnail'), createCourseHandler);
-router.put('/courses/:id', requireRole('instructor', 'admin'), updateCourseHandler);
+router.put('/courses/:id', requireRole('instructor', 'admin'), upload.single('thumbnail'), updateCourseHandler);
 router.delete('/courses/:id', requireRole('instructor', 'admin'), deleteCourseHandler);
 
 export default router;
