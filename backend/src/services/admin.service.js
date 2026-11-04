@@ -79,20 +79,51 @@ export async function getAdminStats() {
 }
 
 export async function getAdminReport(type) {
-  const collections = {
-    users: 'users',
-    courses: 'courses',
-    enrolments: 'enrolments',
-    attendance: 'attendance',
-    results: 'results',
-    assignments: 'assignments',
-    submissions: 'submissions',
-  };
-  const collection = collections[type];
-  if (!collection) throw new ApiError(404, 'Unknown report type');
-  const rows = await db.collection(collection).find({}).toArray();
+  const collectionNames = new Set([
+    'users', 'courses', 'enrolments', 'attendance', 'results', 'assignments', 'submissions',
+  ]);
+  if (!collectionNames.has(type)) throw new ApiError(404, 'Unknown report type');
+  const [rows, users, courses, assignments] = await Promise.all([
+    db.collection(type).find({}).toArray(),
+    db.collection('users').find({}, { projection: { id: 1, name: 1, email: 1, role: 1 } }).toArray(),
+    db.collection('courses').find({}, { projection: { id: 1, title: 1, instructorName: 1, status: 1 } }).toArray(),
+    db.collection('assignments').find({}, { projection: { id: 1, title: 1, courseId: 1, deadline: 1, maxMarks: 1 } }).toArray(),
+  ]);
+  const userById = new Map(users.map((user) => [user.id, user]));
+  const courseById = new Map(courses.map((course) => [course.id, course]));
+  const assignmentById = new Map(assignments.map((assignment) => [assignment.id, assignment]));
+
+  if (type === 'attendance') {
+    return rows.flatMap((session) => (session.records || []).map((record) => ({
+      sessionId: session.id, courseId: session.courseId, courseTitle: session.courseTitle,
+      date: session.date, studentId: record.studentId,
+      studentName: userById.get(record.studentId)?.name || 'Student',
+      status: record.status,
+    })));
+  }
+
   return rows.map((row) => {
     const { _id, clerkId, passwordHash, ...safe } = row;
+    if (type === 'enrolments') {
+      const student = userById.get(row.userId) || {};
+      const course = courseById.get(row.courseId) || {};
+      return { ...safe, studentName: student.name || 'Student', studentEmail: student.email || '', courseTitle: course.title || 'Course' };
+    }
+    if (type === 'results') {
+      const student = userById.get(row.studentId) || {};
+      return { ...safe, studentName: student.name || 'Student', studentEmail: student.email || '' };
+    }
+    if (type === 'submissions') {
+      const assignment = assignmentById.get(row.assignmentId) || {};
+      const student = userById.get(row.studentId) || {};
+      return {
+        ...safe, assignmentTitle: assignment.title || 'Assignment',
+        courseTitle: courseById.get(assignment.courseId)?.title || 'Course',
+        deadline: assignment.deadline || '', studentName: student.name || row.studentName || 'Student',
+        studentEmail: student.email || '',
+      };
+    }
+    if (type === 'users') return safe;
     return safe;
   });
 }
