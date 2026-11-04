@@ -1,4 +1,4 @@
-import { listEnrolments, enrolStudent, updateStudentProgress } from '../services/enrolment.service.js';
+import { listEnrolments, enrolStudent, updateStudentProgress, unenrolStudent } from '../services/enrolment.service.js';
 import { ok, created } from '../utils/core.js';
 import { emit } from '../realtime.js';
 
@@ -18,4 +18,10 @@ export async function updateStudentProgressHandler(req, res) {
   const updated = await updateStudentProgress(req.user, req.params.id, req.body);
   emit('progress_updated', updated, `user_${req.user.id}`);
   ok(res, updated);
+}
+
+export async function unenrolStudentHandler(req, res) {
+  const removed = await unenrolStudent(req.user, req.params.id);
+  emit('student_unenrolled', { userId: req.user.id, courseId: removed.courseId });
+  res.json({ success: true, message: 'You have been unenrolled from this course', data: removed });
 }
