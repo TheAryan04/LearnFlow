@@ -2,7 +2,7 @@ import { ApiError, db, find, findOne, insert, update, uid, today, num } from '..
 import { scopedCourseIds, inScope } from '../scope.js';
 import { ownedCourse } from './course.service.js';
 
-const GRADES = [[90, 'A+', 4.0], [80, 'A', 3.8], [75, 'B+', 3.4], [70, 'B', 3.0], [60, 'C+', 2.5], [50, 'C', 2.0], [40, 'D', 1.5]];
+const GRADES = [[90, 'A', 4.0], [75, 'B', 3.0], [60, 'C', 2.0], [50, 'D', 1.0], [0, 'F', 0.0]];
 const computeGrade = (marks) => (GRADES.find(([limit]) => marks >= limit) || [0, 'F', 0.0]).slice(1);
 
 export async function listAttendance(user, { courseId, studentId }) {
@@ -66,7 +66,6 @@ export async function listResults(user, { studentId }) {
 
 export async function publishResult(user, { courseId, totalMarks, studentId, remarks }) {
   if (!courseId || totalMarks == null) throw new ApiError(400, 'courseId and totalMarks are required');
-  const total = num(totalMarks, 'Total marks', { max: 100 });
   if (!studentId || !(await db.collection('users').findOne({ id: studentId, role: 'Student' }))) {
     throw new ApiError(400, 'A valid studentId is required');
   }
@@ -74,10 +73,24 @@ export async function publishResult(user, { courseId, totalMarks, studentId, rem
   if (!(await db.collection('enrolments').findOne({ userId: studentId, courseId }))) {
     throw new ApiError(400, 'This student is not enrolled in the course');
   }
+
+  const assignments = await find('assignments', { courseId });
+  const assignmentIds = assignments.map((assignment) => assignment.id);
+  const graded = assignmentIds.length
+    ? await find('submissions', { studentId, assignmentId: { $in: assignmentIds }, status: 'Graded' })
+    : [];
+  const possibleMarks = assignments
+    .filter((assignment) => graded.some((submission) => submission.assignmentId === assignment.id))
+    .reduce((sum, assignment) => sum + Number(assignment.maxMarks || 0), 0);
+  const earnedMarks = graded.reduce((sum, submission) => sum + Number(submission.marks || 0), 0);
+  const total = graded.length && possibleMarks > 0
+    ? Math.round((earnedMarks / possibleMarks) * 10000) / 100
+    : num(totalMarks, 'Total marks', { max: 100 });
   const [grade, gpa] = computeGrade(total);
   const existing = await findOne('results', { studentId, courseId });
   const entry = {
-    id: existing?.id || uid('res'), studentId, courseId, courseTitle: course.title, totalMarks: total, grade, gpa,
+    id: existing?.id || uid('res'), studentId, courseId, courseTitle: course.title,
+    totalMarks: total, earnedMarks, possibleMarks, gradedAssignments: graded.length, grade, gpa,
     remarks: remarks || `Demonstrated ${grade} tier proficiency.`, publishedDate: today(),
   };
   if (existing) await update('results', entry.id, entry);
