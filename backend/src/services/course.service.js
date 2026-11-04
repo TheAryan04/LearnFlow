@@ -41,7 +41,7 @@ export async function createCourse(body, user) {
   const title = typeof body.title === 'string' ? body.title.trim() : '';
   if (!title || title.length > 160) throw new ApiError(400, 'Course title is required and must be at most 160 characters');
   const status = body.status || 'draft';
-  if (!['draft', 'published'].includes(status)) throw new ApiError(400, 'Course status must be draft or published');
+  if (!['draft', 'published', 'under-review'].includes(status)) throw new ApiError(400, 'Course status must be draft, under-review, or published');
   let owner = await findOne('users', { id: user.id });
   if (user.role === 'admin' && body.instructorId) {
     owner = await findOne('users', { id: body.instructorId, role: 'Instructor' });
@@ -72,8 +72,8 @@ export async function updateCourse(courseId, user, body) {
     }
     changes.title = changes.title.trim();
   }
-  if ('status' in changes && !['draft', 'published'].includes(changes.status)) {
-    throw new ApiError(400, 'Course status must be draft or published');
+  if ('status' in changes && !['draft', 'published', 'under-review'].includes(changes.status)) {
+    throw new ApiError(400, 'Course status must be draft, under-review, or published');
   }
   if ('price' in changes) changes.price = num(changes.price, 'Price');
   if ('featured' in changes && user.role !== 'admin') delete changes.featured;
