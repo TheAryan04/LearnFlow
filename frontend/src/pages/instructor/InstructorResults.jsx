@@ -65,7 +65,7 @@ export default function InstructorResults() {
 
       toast.success(`Published Grade ${computedGrade} for student!`);
     } catch (err) {
-      toast.info('Result published!');
+      toast.error(err || 'Unable to publish result. Please try again.');
     } finally {
       setSubmitting(false);
     }
