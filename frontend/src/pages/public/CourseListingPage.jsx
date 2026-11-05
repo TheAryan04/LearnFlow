@@ -108,7 +108,7 @@ export default function CourseListingPage() {
               type="button"
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               disabled={page <= 1 || loading}
-              className="lf-btn-secondary inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="lf-btn-primary inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               data-testid="catalogue-page-previous"
             >
               <ChevronLeft className="w-4 h-4" /> Previous
@@ -120,7 +120,7 @@ export default function CourseListingPage() {
               type="button"
               onClick={() => setPage((current) => Math.min(catalogueTotalPages, current + 1))}
               disabled={page >= catalogueTotalPages || loading}
-              className="lf-btn-secondary inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="lf-btn-primary inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               data-testid="catalogue-page-next"
             >
               Next <ChevronRight className="w-4 h-4" />
