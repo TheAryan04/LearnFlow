@@ -334,3 +334,12 @@ class TestCommunity:
         assert requests.get(f"{API}/stats/instructor", headers=H(S["token"]), timeout=30).status_code == 403
         i = requests.get(f"{API}/stats/instructor", headers=H(I["token"]), timeout=30).json()["data"]
         assert i["totalRevenue"].startswith("₹")
+
+    def test_admin_reports_require_admin_role(self, S, I, A):
+        endpoint = f"{API}/admin/reports/users"
+        assert requests.get(endpoint, timeout=30).status_code == 401
+        assert requests.get(endpoint, headers=H(S["token"]), timeout=30).status_code == 403
+        assert requests.get(endpoint, headers=H(I["token"]), timeout=30).status_code == 403
+        admin_response = requests.get(endpoint, headers=H(A["token"]), timeout=30)
+        assert admin_response.status_code == 200, admin_response.text
+        assert isinstance(admin_response.json().get("data"), list)
