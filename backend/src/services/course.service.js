@@ -1,22 +1,53 @@
 import { ApiError, find, findOne, insert, update, uid, num, db } from '../core.js';
+import { parsePageOptions } from '../utils/pagination.js';
 
 const YT_RE = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/;
 const youtubeId = (url) => (String(url || '').match(YT_RE) || [])[1] || null;
 const EDITABLE = ['title', 'category', 'price', 'thumbnail', 'description', 'curriculum', 'previewYoutubeUrl', 'status', 'level', 'language', 'shortDescription', 'featured'];
 const SORTS = { popular: ['enrolledCount', -1], 'price-low': ['price', 1], 'price-high': ['price', -1], rating: ['rating', -1] };
 
-export async function listPublishedCourses({ search, category, sort }) {
-  let courses = await find('courses', { status: 'published' });
-  if (category && category !== 'All') courses = courses.filter((c) => String(c.category || '').toLowerCase() === category.toLowerCase());
+export async function listPublishedCourses({ search, category, sort, page, limit }) {
+  const filter = { status: 'published' };
+  if (category && category !== 'All') {
+    const escapedCategory = String(category).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    filter.category = new RegExp(`^${escapedCategory}$`, 'i');
+  }
   if (search) {
-    const q = String(search).toLowerCase();
-    courses = courses.filter((c) => [c.title, c.category, c.instructorName].some((v) => String(v || '').toLowerCase().includes(q)));
+    const q = String(search).trim().slice(0, 100);
+    if (q) {
+      const escapedQuery = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const matcher = new RegExp(escapedQuery, 'i');
+      filter.$or = [
+        { title: matcher },
+        { category: matcher },
+        { instructorName: matcher },
+      ];
+    }
   }
-  if (SORTS[sort]) {
-    const [key, dir] = SORTS[sort];
-    courses.sort((a, b) => ((a[key] || 0) - (b[key] || 0)) * dir);
+
+  const pagination = parsePageOptions({ page, limit });
+  const sortSpec = SORTS[sort]
+    ? { [SORTS[sort][0]]: SORTS[sort][1], _order: -1 }
+    : { _order: -1 };
+  const collection = db.collection('courses');
+  const total = await collection.countDocuments(filter);
+  let cursor = collection.find(filter, { projection: { _id: 0, _order: 0 } }).sort(sortSpec);
+  if (pagination.enabled) {
+    cursor = cursor.skip(pagination.skip).limit(pagination.limit);
   }
-  return courses;
+  const courses = await cursor.toArray();
+
+  return {
+    courses,
+    total,
+    ...(pagination.enabled
+      ? {
+          page: pagination.page,
+          limit: pagination.limit,
+          totalPages: Math.ceil(total / pagination.limit),
+        }
+      : {}),
+  };
 }
 
 export const listManagedCourses = (user) =>
