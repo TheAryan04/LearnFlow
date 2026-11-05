@@ -109,6 +109,14 @@ yarn start
 - Move backend tests only after updating their execution and CI configuration.
 
 
+## Public course catalogue pagination
+
+The public `GET /api/courses` endpoint supports server-side search, category filtering, sorting, and optional pagination. Pass `page` (1-based) and `limit` (1–50; default 12) to enable pagination. The response keeps `data` as the course array and adds `count`, `page`, `limit`, and `totalPages` metadata. Requests that omit both `page` and `limit` retain the legacy unpaginated response for compatibility.
+
+## Authentication and account recovery
+
+Clerk is the system of record for account signup, sign-in, email verification, and password recovery. The application synchronizes verified Clerk identities into LearnFlow user profiles and does not expose a separate local-password or custom OTP-reset API. If a strict first-party JWT + OTP flow is a non-negotiable synopsis requirement, it requires an explicit authentication architecture change rather than a parallel password system.
+
 ## Admin, reports, and notifications
 
 - Admin user and course operations remain protected by the existing admin role middleware.
