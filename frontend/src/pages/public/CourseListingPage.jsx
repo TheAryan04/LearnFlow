@@ -21,19 +21,24 @@ export default function CourseListingPage() {
   const { user, isAuthenticated, role } = useSelector((s) => s.auth);
   const [category, setCategory] = useState('All');
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [sort, setSort] = useState('popular');
   const [page, setPage] = useState(1);
 
-  useEffect(() => { setPage(1); }, [category, query, sort]);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query.trim()), 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+  useEffect(() => { setPage(1); }, [category, debouncedQuery, sort]);
   useEffect(() => {
     dispatch(fetchCoursePage({
       ...(category !== 'All' ? { category } : {}),
-      ...(query.trim() ? { search: query.trim() } : {}),
+      ...(debouncedQuery ? { search: debouncedQuery } : {}),
       sort,
       page,
       limit: 9,
     }));
-  }, [dispatch, category, query, sort, page]);
+  }, [dispatch, category, debouncedQuery, sort, page]);
   useEffect(() => { if (role === ROLES.STUDENT && user?.id) dispatch(fetchEnrolments(user.id)); }, [dispatch, role, user?.id]);
 
   const visible = courses;
