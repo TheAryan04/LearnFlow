@@ -102,6 +102,28 @@ class TestCourses:
         assert r.status_code == 200
         assert all("react" in (c["title"] + c["category"] + c["instructorName"]).lower() for c in r.json()["data"])
 
+    def test_server_side_pagination(self):
+        first = requests.get(f"{API}/courses", params={"page": 1, "limit": 1}, timeout=30)
+        second = requests.get(f"{API}/courses", params={"page": 2, "limit": 1}, timeout=30)
+        assert first.status_code == second.status_code == 200
+        a, b = first.json(), second.json()
+        assert len(a["data"]) <= 1 and len(b["data"]) <= 1
+        assert a["count"] == b["count"]
+        assert a["page"] == 1 and b["page"] == 2
+        assert a["limit"] == b["limit"] == 1
+        assert a["totalPages"] == b["totalPages"] == a["count"]
+        if a["data"] and b["data"]:
+            assert a["data"][0]["id"] != b["data"][0]["id"]
+
+        beyond = requests.get(f"{API}/courses", params={"page": 999, "limit": 1}, timeout=30)
+        assert beyond.status_code == 200
+        assert beyond.json()["data"] == []
+        assert beyond.json()["count"] == a["count"]
+
+        for params in ({"page": 0}, {"page": "nope"}, {"limit": 51}, {"limit": 0}):
+            invalid = requests.get(f"{API}/courses", params=params, timeout=30)
+            assert invalid.status_code == 400, (params, invalid.status_code, invalid.text)
+
     def test_all_role(self, S, I, A):
         assert requests.get(f"{API}/courses/all", headers=H(S["token"]), timeout=30).status_code == 403
         ri = requests.get(f"{API}/courses/all", headers=H(I["token"]), timeout=30)
