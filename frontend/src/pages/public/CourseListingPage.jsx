@@ -1,46 +1,42 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { Search, X } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import CourseCard from '../../components/course/CourseCard';
 import EmptyState from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/LoadingSpinner';
 import { useToast } from '../../components/common/Toast';
-import { fetchCourses } from '../../redux/slices/coursesSlice';
+import { fetchCoursePage } from '../../redux/slices/coursesSlice';
 import { enrolCourse, fetchEnrolments } from '../../redux/slices/enrolmentsSlice';
 import { COURSE_CATEGORIES, SORT_OPTIONS, ROLES } from '../../utils/constants';
-
-const SORTERS = {
-  popular: (a, b) => b.enrolledCount - a.enrolledCount,
-  rating: (a, b) => b.rating - a.rating,
-  'price-low': (a, b) => a.price - b.price,
-  'price-high': (a, b) => b.price - a.price,
-  newest: () => 0,
-};
 
 export default function CourseListingPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const toast = useToast();
-  const { courses, loading } = useSelector((s) => s.courses);
+  const { courses, loading, catalogueCount, catalogueTotalPages } = useSelector((s) => s.courses);
   const { enrolments } = useSelector((s) => s.enrolments);
   const { user, isAuthenticated, role } = useSelector((s) => s.auth);
   const [category, setCategory] = useState('All');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('popular');
+  const [page, setPage] = useState(1);
 
-  useEffect(() => { dispatch(fetchCourses()); }, [dispatch]);
+  useEffect(() => { setPage(1); }, [category, query, sort]);
+  useEffect(() => {
+    dispatch(fetchCoursePage({
+      ...(category !== 'All' ? { category } : {}),
+      ...(query.trim() ? { search: query.trim() } : {}),
+      sort,
+      page,
+      limit: 9,
+    }));
+  }, [dispatch, category, query, sort, page]);
   useEffect(() => { if (role === ROLES.STUDENT && user?.id) dispatch(fetchEnrolments(user.id)); }, [dispatch, role, user?.id]);
 
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return courses
-      .filter((c) => category === 'All' || c.category === category)
-      .filter((c) => !q || `${c.title} ${c.category} ${c.instructorName}`.toLowerCase().includes(q))
-      .sort(SORTERS[sort]);
-  }, [courses, category, query, sort]);
+  const visible = courses;
 
   const progressFor = (id) => enrolments.find((e) => e.courseId === id);
 
@@ -86,7 +82,7 @@ export default function CourseListingPage() {
           </div>
         </div>
 
-        <p className="py-5 text-sm text-ink-500" data-testid="catalogue-result-count">{visible.length} {visible.length === 1 ? 'course' : 'courses'}</p>
+        <p className="py-5 text-sm text-ink-500" data-testid="catalogue-result-count">{catalogueCount} {catalogueCount === 1 ? 'course' : 'courses'}</p>
 
         {loading && !courses.length ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-14">
@@ -105,6 +101,31 @@ export default function CourseListingPage() {
               );
             })}
           </div>
+        )}
+        {catalogueTotalPages > 1 && (
+          <nav className="flex items-center justify-center gap-4 py-10" aria-label="Course catalogue pagination" data-testid="catalogue-pagination">
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page <= 1 || loading}
+              className="lf-btn-secondary inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              data-testid="catalogue-page-previous"
+            >
+              <ChevronLeft className="w-4 h-4" /> Previous
+            </button>
+            <span className="text-sm text-ink-600" aria-live="polite">
+              Page {page} of {catalogueTotalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.min(catalogueTotalPages, current + 1))}
+              disabled={page >= catalogueTotalPages || loading}
+              className="lf-btn-secondary inline-flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              data-testid="catalogue-page-next"
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </button>
+          </nav>
         )}
       </main>
       <Footer />
