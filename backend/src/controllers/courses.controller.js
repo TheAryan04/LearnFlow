@@ -6,8 +6,11 @@ import { ApiError } from '../utils/errors.js';
 import { saveUpload } from '../storage.js';
 
 export async function listCourses(req, res) {
-  const courses = await listPublishedCourses(req.query);
-  ok(res, courses, { count: courses.length });
+  const result = await listPublishedCourses(req.query);
+  ok(res, result.courses, {
+    count: result.total,
+    ...(result.page ? { page: result.page, limit: result.limit, totalPages: result.totalPages } : {}),
+  });
 }
 export async function listAllCourses(req, res) {
   const courses = await listManagedCourses(req.user);
