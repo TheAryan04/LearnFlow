@@ -20,7 +20,7 @@ test('pagination applies defaults and computes offsets', () => {
 
 test('pagination rejects invalid page and limit values', () => {
   for (const query of [
-    { page: '0' }, { page: '-1' }, { page: '1.5' }, { page: 'abc' },
+    { page: '0' }, { page: '-1' }, { page: '1.5' }, { page: 'abc' }, { page: '9007199254740991' },
     { limit: '0' }, { limit: '-2' }, { limit: '51' }, { limit: '2.5' },
   ]) {
     assert.throws(() => parsePageOptions(query), ApiError);
