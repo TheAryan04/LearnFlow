@@ -18,5 +18,7 @@ export function parsePageOptions(query = {}, { defaultLimit = 12, maxLimit = 50 
     throw new ApiError(400, `Limit must be a whole number between 1 and ${maxLimit}`);
   }
 
-  return { enabled: true, page, limit, skip: (page - 1) * limit };
+  const skip = (page - 1) * limit;
+  if (!Number.isSafeInteger(skip)) throw new ApiError(400, 'Page is too large');
+  return { enabled: true, page, limit, skip };
 }
