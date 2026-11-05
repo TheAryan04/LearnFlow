@@ -115,6 +115,7 @@ const coursesSlice = createSlice({
     cataloguePage: 1,
     catalogueLimit: 12,
     catalogueTotalPages: 0,
+    catalogueRequestId: null,
     selectedCourse: null,
     loading: false,
     error: null,
@@ -138,12 +139,15 @@ const coursesSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchCoursePage.pending, (state) => {
+      .addCase(fetchCoursePage.pending, (state, action) => {
         state.loading = true;
         state.error = null;
+        state.catalogueRequestId = action.meta.requestId;
       })
       .addCase(fetchCoursePage.fulfilled, (state, action) => {
+        if (state.catalogueRequestId !== action.meta.requestId) return;
         state.loading = false;
+        state.catalogueRequestId = null;
         state.courses = action.payload.courses;
         state.catalogueCount = action.payload.count;
         state.cataloguePage = action.payload.page;
@@ -151,7 +155,9 @@ const coursesSlice = createSlice({
         state.catalogueTotalPages = action.payload.totalPages;
       })
       .addCase(fetchCoursePage.rejected, (state, action) => {
+        if (state.catalogueRequestId !== action.meta.requestId) return;
         state.loading = false;
+        state.catalogueRequestId = null;
         state.error = action.payload;
       })
       // fetchCourses
