@@ -37,7 +37,7 @@ yarn install
 yarn start
 ```
 
-Run backend unit tests with `cd backend && npm test`. See [docs/architecture.md](docs/architecture.md) for the MVP architecture, security baseline, and verification guidance.
+Run backend unit tests with `cd backend && npm test`. See [docs/architecture.md](docs/architecture.md) for the MVP architecture, security baseline, and verification guidance. See [docs/deployment.md](docs/deployment.md) for the Render, Vercel, and MongoDB Atlas deployment checklist.
 
 ## Database choice
 
