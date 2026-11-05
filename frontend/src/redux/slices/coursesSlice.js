@@ -13,6 +13,24 @@ export const fetchCourses = createAsyncThunk(
   }
 );
 
+export const fetchCoursePage = createAsyncThunk(
+  'courses/fetchCoursePage',
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/courses', { params });
+      return {
+        courses: response.data || [],
+        count: response.count || 0,
+        page: response.page || 1,
+        limit: response.limit || params.limit || 12,
+        totalPages: response.totalPages || 0,
+      };
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
 export const fetchManagedCourses = createAsyncThunk(
   'courses/fetchManagedCourses',
   async (_, { rejectWithValue }) => {
@@ -93,6 +111,10 @@ const coursesSlice = createSlice({
   name: 'courses',
   initialState: {
     courses: [],
+    catalogueCount: 0,
+    cataloguePage: 1,
+    catalogueLimit: 12,
+    catalogueTotalPages: 0,
     selectedCourse: null,
     loading: false,
     error: null,
@@ -116,6 +138,22 @@ const coursesSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchCoursePage.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCoursePage.fulfilled, (state, action) => {
+        state.loading = false;
+        state.courses = action.payload.courses;
+        state.catalogueCount = action.payload.count;
+        state.cataloguePage = action.payload.page;
+        state.catalogueLimit = action.payload.limit;
+        state.catalogueTotalPages = action.payload.totalPages;
+      })
+      .addCase(fetchCoursePage.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       // fetchCourses
       .addCase(fetchCourses.pending, (state) => {
         state.loading = true;
